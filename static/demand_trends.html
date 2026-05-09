@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demand Trends — ZYNAPSE</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css?v=4">
+  <link rel="stylesheet" href="/static/style-oracle.css?v=4">
+  <link rel="stylesheet" href="/static/style-dark-theme.css?v=5">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <style>
+    .page-hero {
+      background: rgba(255, 255, 255, 0.025);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 60px 0; 
+      color: #fff;
+    }
+    .page-hero h1 { font-size: 2.3rem; font-weight: 500; }
+    .page-hero p  { color: rgba(255,255,255,0.45); }
+
+    .filter-bar {
+      background: #0f172a;
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 16px 0;
+      color: #fff;
+    }
+    .filter-bar select {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 6px 12px;
+      color: #fff;
+      font-size: .85rem;
+    }
+    .filter-bar select option { background: #1e293b; color: #fff; }
+
+    .insight-box {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #fff;
+      padding: 20px; border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    }
+    .insight-box p { margin: 0; font-size: .9rem; line-height: 1.8; color: rgba(255,255,255,0.7); }
+
+    /* ── drill-down panel ── */
+    .drill-panel {
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(24px);
+      padding: 24px;
+      margin-top: 28px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    }
+    .drill-header {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+    }
+    .drill-title  { font-size: 1.15rem; font-weight: 500; color: #fff; }
+    .drill-close  {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; padding: 4px 12px;
+      font-size: .8rem; cursor: pointer; color: #fff;
+    }
+    .drill-close:hover { background: rgba(255,255,255,0.1); }
+
+    .cluster-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px; margin-bottom: 20px;
+    }
+    .cluster-card { border-radius: 12px; padding: 16px; text-align: center; 
+      background: rgba(255,255,255,0.03); 
+      backdrop-filter: blur(10px);
+    }
+    .cluster-card.hot  { border: 1px solid rgba(245, 158, 11, 0.4); box-shadow: 0 0 15px rgba(245, 158, 11, 0.1); }
+    .cluster-card.warm { border: 1px solid rgba(59, 130, 246, 0.4); box-shadow: 0 0 15px rgba(59, 130, 246, 0.1); }
+    .cluster-card.cold { border: 1px solid rgba(255, 255, 255, 0.1); }
+    .cluster-card .c-val { font-size: 1.4rem; font-weight: 600; color: #fff; }
+    .cluster-card .c-lbl { font-size: .75rem; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+    .drill-charts {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 20px; margin-bottom: 20px;
+    }
+    @media (max-width: 640px) { .drill-charts { grid-template-columns: 1fr; } }
+
+    .segment-badge {
+      display: inline-block; font-size: .7rem; font-weight: 600;
+      padding: 2px 8px; border-radius: 99px; text-transform: uppercase;
+    }
+    .seg-hot  { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .seg-warm { background: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .seg-cold { background: rgba(255, 255, 255, 0.05); color: #d1d5db; border: 1px solid rgba(255, 255, 255, 0.1); }
+
+    .trend-row-clickable { cursor: pointer; transition: all 0.2s; }
+    .trend-row-clickable:hover td { background: rgba(255,255,255,0.04) !important; }
+    .trend-row-clickable.active-row td { background: rgba(255,255,255,0.08) !important; }
+  </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="qc-navbar">
+  <div class="container d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-4">
+      <a href="/index.html" class="navbar-brand logo-text"><strong>ZYNAPSE</strong></a>
+      <ul class="qc-nav-links d-flex gap-3 mb-0">
+        <li><a href="/marketplace.html">Marketplace</a></li>
+        <li><a href="/demand_trends.html" class="active">Demand Trends</a></li>
+        <li><a href="/predictions.html">Predictions</a></li>
+        <li><a href="/inventory.html">Inventory</a></li>
+        <li><a href="/category_analysis.html">Category Analysis</a></li>
+      </ul>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <a href="/checkout.html" class="icon-btn" style="color:#ffffff;font-size:1.3rem;position:relative;"><i class="bi bi-cart3"></i><span id="navCartCount" style="position:absolute; top:-5px; right:-10px; background:#ef4444; color:white; font-size:0.65rem; padding:2px 5px; border-radius:10px; font-weight:bold; display:none;">0</span></a>
+      <div style="position:relative;" id="profileDropdown">
+        <img id="navAvatar" src="https://ui-avatars.com/api/?name=U&background=6366f1&color=fff&rounded=true" class="nav-avatar" style="cursor:pointer;">
+        <div id="profileMenu" class="profile-menu">
+          <div class="profile-menu-header"><div class="pm-name" id="pmName">User</div><div class="pm-email" id="pmEmail">--</div></div>
+          <a href="/profile.html" class="profile-menu-item"><i class="bi bi-person-circle"></i> My Profile</a>
+          <a href="/my_products.html" class="profile-menu-item"><i class="bi bi-box-seam"></i> My Products</a>
+          <a href="/add_product.html" class="profile-menu-item"><i class="bi bi-plus-circle"></i> Add Product</a>
+          <a href="/predictions.html" class="profile-menu-item"><i class="bi bi-cpu"></i> AI Predictions</a>
+          <div class="profile-menu-divider"></div>
+          <a href="#" class="profile-menu-item danger" id="navSignOut"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="oracle-main-container">
+
+  <!-- HERO -->
+  <section class="page-hero">
+    <div class="container">
+      <div class="badge-pill mb-2"><i class="bi bi-graph-up-arrow"></i> LIVE INTELLIGENCE</div>
+      <h1>Demand Trends</h1>
+      <p>Real-time demand signals powered by AI insights.</p>
+    </div>
+  </section>
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <div class="container d-flex flex-wrap gap-3 align-items-center">
+      <label class="mb-0">Show top</label>
+      <select id="top-select">
+        <option value="10">10</option>
+        <option value="20" selected>20</option>
+        <option value="50">50</option>
+      </select>
+
+      <label class="mb-0">Sort by</label>
+      <select id="sort-select">
+        <option value="avg_demand_score">Demand Score</option>
+        <option value="total_bought">Units Bought</option>
+        <option value="product_count">Product Count</option>
+      </select>
+
+      <button id="refresh-btn" class="btn btn-primary btn-sm ms-auto">
+        <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+      </button>
+      <a href="/category_analysis.html" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-bar-chart-steps me-1"></i>Category Analysis
+      </a>
+    </div>
+  </div>
+
+  <div class="container py-4">
+
+    <!-- AI INSIGHTS -->
+    <div class="insight-box">
+      <h5 class="mb-2">🧠 AI Insights</h5>
+      <p id="top5-insight">Loading top categories…</p>
+      <p id="recommendation">Calculating recommendation…</p>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="card-dark p-3 text-center" style="border-radius: 12px;">
+          <div id="stat-surging" class="stat-val fs-3 fw-bold text-white">—</div>
+          <div class="text-white-50">Surging</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card-dark p-3 text-center" style="border-radius: 12px;">
+          <div id="stat-rising" class="stat-val fs-3 fw-bold text-white">—</div>
+          <div class="text-white-50">Rising</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card-dark p-3 text-center" style="border-radius: 12px;">
+          <div id="stat-total-bought" class="stat-val fs-3 fw-bold text-white">—</div>
+          <div class="text-white-50">Units</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card-dark p-3 text-center" style="border-radius: 12px;">
+          <div id="stat-avg-score" class="stat-val fs-3 fw-bold text-white">—</div>
+          <div class="text-white-50">Avg Score</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BAR CHART — fixed height so it never grows too tall -->
+    <div class="card-dark p-4 mb-4">
+      <h5 class="text-white">Top Categories by Demand Score</h5>
+      <div style="position:relative; height:280px;">
+        <canvas id="barChart"></canvas>
+      </div>
+    </div>
+
+    <!-- TREND TABLE -->
+    <div class="card-dark p-4">
+      <h5 class="text-white">
+        Trend Breakdown
+        <small class="text-white-50 ms-2" style="font-size:.75rem; font-weight:400;">
+          — click a row to analyse
+        </small>
+      </h5>
+
+      <div id="table-loading" class="text-center py-4">
+        <div class="spinner-border text-primary"></div>
+      </div>
+
+      <div class="table-responsive" id="table-wrap" style="display:none;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>#</th><th>Category</th><th>Trend</th>
+              <th>Score</th><th>Units</th><th>Products</th><th>Best Sellers</th>
+            </tr>
+          </thead>
+          <tbody id="trend-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CATEGORY DRILL-DOWN PANEL -->
+    <div class="drill-panel" id="drillPanel" style="display:none;">
+
+      <div class="drill-header">
+        <div>
+          <div class="drill-title" id="drillTitle">Category Analysis</div>
+          <small class="text-white-50" id="drillSubtitle">KMeans clustering + demand scoring</small>
+        </div>
+        <button class="drill-close" id="drillClose">✕ Close</button>
+      </div>
+
+      <div id="drillLoading" class="text-center py-4">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-2 text-white-50">Running KMeans clustering…</p>
+      </div>
+
+      <div id="drillContent" style="display:none;">
+
+        <!-- mini stat cards -->
+        <div class="row g-3 mb-3" id="drillStats"></div>
+
+        <!-- cluster segment cards -->
+        <h6 class="fw-bold mb-2">KMeans Segments (Price × Demand Score)</h6>
+        <div class="cluster-cards" id="clusterCards"></div>
+
+        <!-- two charts -->
+        <div class="drill-charts">
+          <div>
+            <h6 class="fw-semibold mb-2">Segment Distribution</h6>
+            <div style="position:relative; height:220px;">
+              <canvas id="segChart"></canvas>
+            </div>
+          </div>
+          <div>
+            <h6 class="fw-semibold mb-2">Price vs Demand Score</h6>
+            <div style="position:relative; height:220px;">
+              <canvas id="scatterChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- top products table -->
+        <h6 class="fw-bold mb-2">Top 10 Products in Category</h6>
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>#</th><th>Product</th><th>Price (₹)</th>
+                <th>Stars</th><th>Bought/mo</th>
+                <th>Score</th><th>Level</th><th>Segment</th>
+              </tr>
+            </thead>
+            <tbody id="drillTbody"></tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="qc-footer text-center">
+    <p>&copy; 2026 ZYNAPSE Systems</p>
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const BASE = "";
+let trendChartInst, segChartInst, scatterChartInst;
+
+/* ════════════════════════════════════════
+   TRENDS  (all data from /api/trends)
+════════════════════════════════════════ */
+async function loadTrends() {
+  const top     = document.getElementById("top-select").value;
+  const sortBy  = document.getElementById("sort-select").value;
+
+  document.getElementById("table-loading").style.display = "block";
+  document.getElementById("table-wrap").style.display    = "none";
+
+  const res  = await fetch(`${BASE}/api/trends?top=${top}`);
+  const data = await res.json();
+  let rows   = data.data || [];
+
+  if (!rows.length) return;
+
+  // client-side sort based on dropdown
+  if (sortBy === "total_bought")   rows.sort((a,b) => b.total_bought   - a.total_bought);
+  if (sortBy === "product_count")  rows.sort((a,b) => b.product_count  - a.product_count);
+  // default: avg_demand_score already sorted by API
+
+  // stat cards
+  const surging    = rows.filter(r => r.trend === "Surging").length;
+  const rising     = rows.filter(r => r.trend === "Rising").length;
+  const totalUnits = rows.reduce((s,r) => s + r.total_bought, 0);
+  const avgScore   = (rows.reduce((s,r) => s + r.avg_demand_score, 0) / rows.length).toFixed(2);
+
+  document.getElementById("stat-surging").innerText     = surging;
+  document.getElementById("stat-rising").innerText      = rising;
+  document.getElementById("stat-total-bought").innerText = totalUnits.toLocaleString();
+  document.getElementById("stat-avg-score").innerText   = avgScore;
+
+  // AI insights
+  const top5 = [...rows].sort((a,b) => b.avg_demand_score - a.avg_demand_score).slice(0,5);
+  document.getElementById("top5-insight").innerText =
+    "Top 5 by demand: " + top5.map(c => c.category).join(", ");
+
+  const best = [...rows].map(r => ({
+    ...r, composite: r.avg_demand_score * 0.7 + r.total_bought * 0.0003
+  })).sort((a,b) => b.composite - a.composite)[0];
+  document.getElementById("recommendation").innerText =
+    `Recommended: ${best.category} — best balance of demand score & sales volume`;
+
+  // bar chart (top 10 only, fixed height container handles size)
+  const chartRows = rows.slice(0, 10);
+  const ctx = document.getElementById("barChart");
+  if (trendChartInst) trendChartInst.destroy();
+  trendChartInst = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: chartRows.map(c => c.category),
+      datasets: [{
+        label: "Avg Demand Score",
+        data:  chartRows.map(c => c.avg_demand_score),
+        backgroundColor: chartRows.map(c =>
+          c.trend === "Surging" ? "#16a34a" :
+          c.trend === "Rising"  ? "#2563eb" :
+          c.trend === "Stable"  ? "#f59e0b" : "#9ca3af"
+        ),
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { maxRotation: 35, font: { size: 11 } } },
+        y: { beginAtZero: false }
+      }
+    }
+  });
+
+  // trend table — all rows, clickable
+  const trendBadge = t =>
+    t === "Surging"  ? '<span class="badge bg-success">Surging</span>'  :
+    t === "Rising"   ? '<span class="badge bg-primary">Rising</span>'   :
+    t === "Stable"   ? '<span class="badge bg-warning text-white">Stable</span>' :
+                       '<span class="badge bg-secondary">Declining</span>';
+
+  document.getElementById("trend-tbody").innerHTML = rows.map((r, i) => `
+    <tr class="trend-row-clickable" data-category="${r.category}">
+      <td>${i+1}</td>
+      <td>${r.category}</td>
+      <td>${trendBadge(r.trend)}</td>
+      <td><strong>${r.avg_demand_score}</strong></td>
+      <td>${r.total_bought.toLocaleString()}</td>
+      <td>${r.product_count}</td>
+      <td>${r.best_sellers}</td>
+    </tr>`).join("");
+
+  document.getElementById("table-loading").style.display = "none";
+  document.getElementById("table-wrap").style.display    = "block";
+
+  attachRowClicks();
+}
+
+/* ════════════════════════════════════════
+   ROW CLICK → DRILL-DOWN
+════════════════════════════════════════ */
+function attachRowClicks() {
+  document.querySelectorAll(".trend-row-clickable").forEach(tr => {
+    tr.addEventListener("click", () => {
+      document.querySelectorAll(".trend-row-clickable").forEach(r => r.classList.remove("active-row"));
+      tr.classList.add("active-row");
+      loadDrillDown(tr.dataset.category);
+    });
+  });
+}
+
+async function loadDrillDown(category) {
+  const panel   = document.getElementById("drillPanel");
+  const loading = document.getElementById("drillLoading");
+  const content = document.getElementById("drillContent");
+
+  panel.style.display   = "block";
+  loading.style.display = "block";
+  content.style.display = "none";
+  panel.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  document.getElementById("drillTitle").textContent    = category + " — Deep Analysis";
+  document.getElementById("drillSubtitle").textContent = "KMeans clustering + RF demand scoring";
+
+  try {
+    const res  = await fetch(`${BASE}/api/category-analysis?category=${encodeURIComponent(category)}`);
+    if (!res.ok) throw new Error("API error");
+    const data = await res.json();
+
+    renderDrillStats(data.stats);
+    renderClusterCards(data.cluster_summary);
+    renderSegChart(data.cluster_summary);
+    renderScatter(data.scatter);
+    renderDrillTable(data.top_products);
+
+    loading.style.display = "none";
+    content.style.display = "block";
+  } catch(e) {
+    loading.innerHTML = '<p class="text-danger p-3">Failed to load analysis.</p>';
+    console.error(e);
+  }
+}
+
+function renderDrillStats(s) {
+  document.getElementById("drillStats").innerHTML = [
+    ["Products",     s.product_count],
+    ["Avg Price",    "₹" + s.avg_price],
+    ["Avg Stars",    "★ " + s.avg_stars],
+    ["Avg Score",    s.avg_demand_score],
+    ["Total Bought", s.total_bought.toLocaleString()],
+    ["Best Sellers", s.best_sellers],
+  ].map(([lbl, val]) => `
+    <div class="col-6 col-md-2">
+      <div class="card-dark text-center p-2">
+        <div class="stat-val" style="font-size:1.05rem; color:#fff;">${val}</div>
+        <div style="font-size:.7rem; color:rgba(255,255,255,0.6);">${lbl}</div>
+      </div>
+    </div>`).join("");
+}
+
+function renderClusterCards(clusters) {
+  document.getElementById("clusterCards").innerHTML = clusters.map(c => `
+    <div class="cluster-card ${c.segment.toLowerCase()}">
+      <div class="c-val">${c.count}</div>
+      <div class="c-lbl">${c.segment} Products</div>
+      <div style="font-size:.75rem; margin-top:6px; color: #ffffff;">
+        Score: <strong>${c.avg_demand_score}</strong><br>
+        Avg ₹${c.avg_price} &nbsp;★${c.avg_stars}
+      </div>
+    </div>`).join("");
+}
+
+function renderSegChart(clusters) {
+  const ctx = document.getElementById("segChart");
+  if (segChartInst) segChartInst.destroy();
+  const colors = { Hot: "#f59e0b", Warm: "#3b82f6", Cold: "#9ca3af" };
+  segChartInst = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels:   clusters.map(c => c.segment),
+      datasets: [{ data: clusters.map(c => c.count),
+                   backgroundColor: clusters.map(c => colors[c.segment] || "#ccc") }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend: { position: "bottom" } }
+    }
+  });
+}
+
+function renderScatter(points) {
+  const ctx = document.getElementById("scatterChart");
+  if (scatterChartInst) scatterChartInst.destroy();
+  const colors = { Hot: "#f59e0b", Warm: "#3b82f6", Cold: "#9ca3af" };
+  const groups = {};
+  points.forEach(p => {
+    if (!groups[p.segment]) groups[p.segment] = [];
+    groups[p.segment].push({ x: p.x, y: p.y, title: p.title });
+  });
+  scatterChartInst = new Chart(ctx, {
+    type: "scatter",
+    data: {
+      datasets: Object.entries(groups).map(([seg, pts]) => ({
+        label: seg, data: pts,
+        backgroundColor: (colors[seg] || "#ccc") + "99",
+        pointRadius: 4,
+      }))
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "bottom" },
+        tooltip: { callbacks: { label: c => `${c.raw.title} | ₹${c.raw.x} | ${c.raw.y}` } }
+      },
+      scales: {
+        x: { title: { display: true, text: "Price (₹)" } },
+        y: { title: { display: true, text: "Demand Score" } }
+      }
+    }
+  });
+}
+
+function renderDrillTable(products) {
+  const lvl = l =>
+    l === "High"   ? '<span class="badge bg-success">High</span>'   :
+    l === "Medium" ? '<span class="badge bg-primary">Medium</span>' :
+                     '<span class="badge bg-secondary">Low</span>';
+  const seg = s => `<span class="segment-badge seg-${s.toLowerCase()}">${s}</span>`;
+
+  document.getElementById("drillTbody").innerHTML = products.map((p, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+          title="${p.title}">${p.title}</td>
+      <td>₹${p.price}</td>
+      <td>★${p.stars}</td>
+      <td>${p.bought_last_month}</td>
+      <td><strong>${p.demand_score}</strong></td>
+      <td>${lvl(p.demand_level)}</td>
+      <td>${seg(p.segment)}</td>
+    </tr>`).join("");
+}
+
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+document.getElementById("refresh-btn").addEventListener("click", loadTrends);
+document.getElementById("drillClose").addEventListener("click", () => {
+  document.getElementById("drillPanel").style.display = "none";
+  document.querySelectorAll(".trend-row-clickable").forEach(r => r.classList.remove("active-row"));
+});
+
+document.addEventListener("DOMContentLoaded", loadTrends);
+</script>
+
+<script src="/static/nav_user.js"></script>
+</body>
+</html>

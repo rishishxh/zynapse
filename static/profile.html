@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile - ZYNAPSE</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css?v=4">
+<link rel="stylesheet" href="/static/style-oracle.css?v=4">
+  <link rel="stylesheet" href="/static/style-dark-theme.css?v=5">
+<style>
+.page-hero { background:linear-gradient(135deg,#0f172a 0%,#312e81 60%,#6366f1 100%); padding:50px 0; color:#fff; }
+.page-hero h1 { font-size:2rem; font-weight:800; }
+.page-hero p  { color:#c7d2fe; }
+.pcard { background: #111827; border: 1px solid rgba(255,255,255,0.1); border-radius:14px; padding:24px; margin-bottom:24px; color: #fff; }
+.pcard h5 { font-size:.95rem; font-weight:700; color: #fff; margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.1); }
+.avatar-circle { width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg,#6366f1,#312e81); display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:800; color:#fff; margin:0 auto 12px; }
+.info-row { display:flex; padding:9px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:.875rem; }
+.info-row:last-child { border-bottom:none; }
+.info-lbl { width:140px; flex-shrink:0; font-weight:600; color: rgba(255,255,255,0.5); font-size:.75rem; text-transform:uppercase; }
+.info-val { color: #fff; font-weight:500; }
+.role-badge { display:inline-block; background:rgba(99, 102, 241, 0.1); color: #818cf8; font-size:.7rem; font-weight:700; padding:3px 10px; border-radius:99px; }
+.stat-mini { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255,0.1); border-radius:10px; padding:14px; text-align:center; }
+.stat-mini .v { font-size:1.5rem; font-weight:800; color: #fff; }
+.stat-mini .l { font-size:.7rem; color: rgba(255,255,255,0.5); text-transform:uppercase; margin-top:2px; }
+.qlink { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:8px; color: rgba(255,255,255,0.7); text-decoration:none; font-size:.875rem; font-weight:500; }
+.qlink:hover { background: rgba(255,255,255,0.05); color: #fff; }
+.qlink i { color: rgba(255,255,255,0.5); }
+/* overlay modal */
+.ov { position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:9999; display:none; align-items:center; justify-content:center; }
+.ov.show { display:flex; }
+.mbox { background: #111827; border: 1px solid rgba(255,255,255,0.1); border-radius:16px; padding:28px; width:100%; max-width:500px; max-height:90vh; overflow-y:auto; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); color: #fff; }
+.mbox h4 { font-size:1.1rem; font-weight:800; color: #fff; margin-bottom:18px; }
+.mfield { margin-bottom:14px; }
+.mfield label { display:block; font-size:.72rem; font-weight:700; text-transform:uppercase; color: rgba(255,255,255,0.6); margin-bottom:5px; }
+.mfield input, .mfield select, .mfield textarea { width:100%; padding:9px 12px; border:1px solid rgba(255,255,255,0.1); border-radius:8px; font-size:.875rem; background: rgba(255, 255, 255, 0.05); color: #fff; }
+.mfield input:focus, .mfield select:focus, .mfield textarea:focus { outline:none; border-color: #6366f1; background: rgba(255, 255, 255, 0.08); }
+.mgrid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.mgrid .full { grid-column:1/-1; }
+.toast-qc { position:fixed; bottom:24px; right:24px; background:#1e1b4b; color:#fff; padding:12px 20px; border-radius:10px; font-size:.875rem; z-index:99999; display:none; box-shadow:0 4px 16px rgba(0,0,0,.2); }
+.toast-qc.show { display:block; }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="qc-navbar">
+  <div class="container d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-4">
+      <a href="/index.html" class="navbar-brand logo-text"><strong>ZYNAPSE</strong></a>
+      <ul class="qc-nav-links d-flex gap-3 mb-0">
+        <li><a href="/marketplace.html">Marketplace</a></li>
+        <li><a href="/demand_trends.html">Demand Trends</a></li>
+        <li><a href="/predictions.html">Predictions</a></li>
+        <li><a href="/inventory.html">Inventory</a></li>
+        <li><a href="/category_analysis.html">Category Analysis</a></li>
+      </ul>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <div class="search-box d-flex align-items-center gap-2">
+        <input type="text" id="nav-search-input" class="form-control"
+          placeholder="Search products..."
+          style="border-radius: 20px; min-width: 260px; padding-left: 1rem;">
+        <button id="nav-search-btn" class="btn btn-primary"
+          style="height: 40px; border-radius: 20px; padding: 0 1.5rem; font-weight: 600;">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+
+      <a href="/checkout.html" class="icon-btn" style="color:#ffffff;font-size:1.3rem;position:relative;"><i class="bi bi-cart3"></i><span id="navCartCount" style="position:absolute; top:-5px; right:-10px; background:#ef4444; color:white; font-size:0.65rem; padding:2px 5px; border-radius:10px; font-weight:bold; display:none;">0</span></a>
+      <div style="position:relative;" id="profileDropdown">
+        <img id="navAvatar" src="https://ui-avatars.com/api/?name=U&background=6366f1&color=fff&rounded=true" class="nav-avatar" style="cursor:pointer;">
+        <div id="profileMenu" class="profile-menu">
+          <div class="profile-menu-header"><div class="pm-name" id="pmName">User</div><div class="pm-email" id="pmEmail">--</div></div>
+          <a href="/profile.html" class="profile-menu-item"><i class="bi bi-person-circle"></i> My Profile</a>
+          <a href="/my_products.html" class="profile-menu-item"><i class="bi bi-box-seam"></i> My Products</a>
+          <a href="/add_product.html" class="profile-menu-item"><i class="bi bi-plus-circle"></i> Add Product</a>
+          <a href="/predictions.html" class="profile-menu-item"><i class="bi bi-cpu"></i> AI Predictions</a>
+          <div class="profile-menu-divider"></div>
+          <a href="#" class="profile-menu-item danger" id="navSignOut"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="oracle-main-container">
+  <section class="page-hero">
+    <div class="container">
+      <div class="badge-pill mb-2"><i class="bi bi-person-circle"></i> MY PROFILE</div>
+      <h1 id="heroName">My Profile</h1>
+      <p id="heroEmail">Loading...</p>
+    </div>
+  </section>
+
+  <div class="container py-4">
+    <div class="row g-4">
+
+      <!-- LEFT -->
+      <div class="col-lg-3">
+        <div class="pcard text-center">
+          <div class="avatar-circle" id="avatarCircle">U</div>
+          <div class="fw-bold fs-5 mb-1 text-white" id="cardName">--</div>
+          <div class="text-white-50 small mb-2" id="cardEmail">--</div>
+          <span class="role-badge" id="cardRole">--</span>
+          <hr class="my-3">
+          <div class="text-start">
+            <a href="/marketplace.html" class="qlink"><i class="bi bi-shop"></i> Marketplace</a>
+            <a href="/inventory.html"   class="qlink"><i class="bi bi-boxes"></i> Inventory</a>
+            <a href="/predictions.html" class="qlink"><i class="bi bi-graph-up"></i> Predictions</a>
+            <a href="/demand_trends.html" class="qlink"><i class="bi bi-bar-chart-line"></i> Demand Trends</a>
+            <a href="/add_product.html" class="qlink"><i class="bi bi-plus-circle"></i> Add Product</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="col-lg-9">
+
+        <!-- Profile info -->
+        <div class="pcard">
+          <div class="d-flex align-items-center justify-content-between mb-0">
+            <h5 class="mb-0"><i class="bi bi-person me-2"></i>Profile Information</h5>
+            <div class="d-flex gap-2">
+              <button class="btn btn-primary btn-sm" id="editBtn"><i class="bi bi-pencil me-1"></i>Edit Profile</button>
+              <button class="btn btn-outline-danger btn-sm" id="signOutBtn"><i class="bi bi-box-arrow-right me-1"></i>Sign Out</button>
+            </div>
+          </div>
+          <hr class="mt-3 mb-0">
+          <div class="info-row"><span class="info-lbl">Full Name</span><span class="info-val" id="pfName">--</span></div>
+          <div class="info-row"><span class="info-lbl">Email</span><span class="info-val" id="pfEmail">--</span></div>
+          <div class="info-row"><span class="info-lbl">Phone</span><span class="info-val" id="pfPhone">--</span></div>
+          <div class="info-row"><span class="info-lbl">Department</span><span class="info-val" id="pfDept">--</span></div>
+          <div class="info-row"><span class="info-lbl">City</span><span class="info-val" id="pfCity">--</span></div>
+          <div class="info-row"><span class="info-lbl">Role</span><span class="info-val" id="pfRole">--</span></div>
+          <div class="info-row"><span class="info-lbl">Joined</span><span class="info-val" id="pfJoined">--</span></div>
+          <div class="info-row"><span class="info-lbl">Last Login</span><span class="info-val" id="pfLogin">--</span></div>
+        </div>
+
+        <!-- Stats -->
+        <div class="pcard">
+          <h5><i class="bi bi-bar-chart me-2"></i>Platform Stats</h5>
+          <div class="row g-3">
+            <div class="col-6 col-md-3"><div class="stat-mini"><div class="v" id="stTotal">--</div><div class="l">Products</div></div></div>
+            <div class="col-6 col-md-3"><div class="stat-mini"><div class="v" id="stCats">--</div><div class="l">Categories</div></div></div>
+            <div class="col-6 col-md-3"><div class="stat-mini"><div class="v" id="stHigh">--</div><div class="l">High Demand</div></div></div>
+            <div class="col-6 col-md-3"><div class="stat-mini"><div class="v" id="stMine">--</div><div class="l">My Products</div></div></div>
+          </div>
+        </div>
+
+        <!-- My Products -->
+        <div class="pcard">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="mb-0"><i class="bi bi-box-seam me-2"></i>My Products</h5>
+            <a href="/add_product.html" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Add Product</a>
+          </div>
+          <div id="myProductsGrid" class="row g-3">
+            <div class="col-12 text-center text-white-50 py-3">Loading...</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <footer class="qc-footer text-center"><p>&copy; 2026 ZYNAPSE Systems</p></footer>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="ov" id="editModal">
+  <div class="mbox">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0"><i class="bi bi-pencil-square me-2" style="color: #6366f1;"></i>Edit Profile</h4>
+      <button style="background:none;border:none;font-size:1.4rem;color:#9ca3af;cursor:pointer;" id="closeEdit">&times;</button>
+    </div>
+    <div class="mgrid">
+      <div class="full mfield"><label>Full Name</label><input type="text" id="eName"></div>
+      <div class="full mfield"><label>Email</label><input type="email" id="eEmail"></div>
+      <div class="mfield"><label>Phone</label><input type="text" id="ePhone"></div>
+      <div class="mfield"><label>Department</label><input type="text" id="eDept"></div>
+      <div class="mfield"><label>City</label>
+        <select id="eCity">
+          <option value="">Select</option>
+          <option>Mumbai</option><option>Delhi</option><option>Bangalore</option>
+          <option>Chennai</option><option>Hyderabad</option><option>Pune</option>
+          <option>Kolkata</option><option>Ahmedabad</option>
+        </select>
+      </div>
+      <div class="mfield"><label>Role</label>
+        <select id="eRole">
+          <option value="Analyst">Analyst</option>
+          <option value="Manager">Manager</option>
+          <option value="Admin">Admin</option>
+          <option value="Viewer">Viewer</option>
+        </select>
+      </div>
+      <div class="full mfield"><label>New Password <span style="font-weight:400;color:#9ca3af;">(leave blank to keep)</span></label><input type="password" id="ePass" placeholder="New password"></div>
+    </div>
+    <div class="d-flex gap-2 justify-content-end mt-3">
+      <button class="btn btn-outline-secondary" id="cancelEdit">Cancel</button>
+      <button class="btn btn-primary" id="saveEdit"><i class="bi bi-check-circle me-1"></i>Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIGN OUT MODAL -->
+<div class="ov" id="signOutModal">
+  <div class="mbox" style="max-width:360px; text-align:center;">
+    <div style="width:56px;height:56px;background:rgba(239, 68, 68, 0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:1.4rem;color: #ef4444;">
+      <i class="bi bi-box-arrow-right"></i>
+    </div>
+    <h4>Sign Out</h4>
+    <p class="text-white-50 mb-4" style="font-size:.875rem;">Are you sure you want to sign out of ZYNAPSE?</p>
+    <div class="d-flex gap-2 justify-content-center">
+      <button class="btn btn-outline-secondary px-4" id="cancelSignOut">Cancel</button>
+      <button class="btn btn-danger px-4" id="confirmSignOut"><i class="bi bi-box-arrow-right me-1"></i>Yes, Sign Out</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-qc" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* auth guard */
+var raw = localStorage.getItem('qc_user');
+if (!raw) { window.location.replace('/login.html'); }
+var user = JSON.parse(raw || '{}');
+
+function g(id) { return document.getElementById(id); }
+
+function toast(msg) {
+  var t = g('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2800);
+}
+
+function renderProfile() {
+  var name  = user.name  || 'User';
+  var email = user.email || '';
+  var role  = user.role  || 'Analyst';
+  var init  = name.charAt(0).toUpperCase();
+  g('heroName').textContent    = name;
+  g('heroEmail').textContent   = email;
+  g('cardName').textContent    = name;
+  g('cardEmail').textContent   = email;
+  g('cardRole').textContent    = role;
+  g('avatarCircle').textContent = init;
+  g('navAvatar').src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(init) + '&background=6366f1&color=fff&rounded=true';
+  g('pfName').textContent   = name;
+  g('pfEmail').textContent  = email;
+  g('pfPhone').textContent  = user.phone      || '--';
+  g('pfDept').textContent   = user.department || '--';
+  g('pfCity').textContent   = user.city       || '--';
+  g('pfRole').textContent   = role;
+  g('pfJoined').textContent = user.joined     || '--';
+  g('pfLogin').textContent  = new Date().toLocaleString();
+}
+
+/* stats */
+fetch('/api/stats').then(function(r){return r.json();}).then(function(d){
+  g('stTotal').textContent = d.total_products.toLocaleString();
+  g('stCats').textContent  = d.total_categories;
+}).catch(function(){});
+fetch('/api/inventory').then(function(r){return r.json();}).then(function(d){
+  if (d.metrics) g('stHigh').textContent = d.metrics.high_demand.toLocaleString();
+}).catch(function(){});
+
+/* my products */
+function loadMyProducts() {
+  if (!user.email) return;
+  fetch('/api/user/products?email=' + encodeURIComponent(user.email))
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var list = d.data || [];
+    g('stMine').textContent = list.length;
+    if (!list.length) {
+      g('myProductsGrid').innerHTML = '<div class="col-12 text-center text-white-50 py-3">No products added yet. <a href="/add_product.html">Add one now</a></div>';
+      return;
+    }
+    g('myProductsGrid').innerHTML = list.map(function(p) {
+      return '<div class="col-sm-6 col-md-4"><div class="card h-100 border-0" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1) !important;">' +
+        '<div class="card-body"><div class="fw-600 mb-1 text-white" style="font-size:.9rem;">' + (p.title||'') + '</div>' +
+        '<div class="text-white-50" style="font-size:.75rem;">' + (p.categoryName||'') + '</div>' +
+        '<div class="mt-2 fw-700 text-white">&#8377;' + Math.floor(p.price||0).toLocaleString() + '</div>' +
+        '<div style="font-size:.75rem;color: rgba(255,255,255,0.5);">Added: ' + (p.added_on||'') + '</div>' +
+        '</div></div></div>';
+    }).join('');
+  }).catch(function(){});
+}
+
+/* edit modal */
+g('editBtn').addEventListener('click', function() {
+  g('eName').value  = user.name  || '';
+  g('eEmail').value = user.email || '';
+  g('ePhone').value = user.phone      || '';
+  g('eDept').value  = user.department || '';
+  g('eCity').value  = user.city       || '';
+  g('eRole').value  = user.role       || 'Analyst';
+  g('ePass').value  = '';
+  g('editModal').classList.add('show');
+});
+g('closeEdit').addEventListener('click',  function() { g('editModal').classList.remove('show'); });
+g('cancelEdit').addEventListener('click', function() { g('editModal').classList.remove('show'); });
+g('editModal').addEventListener('click',  function(e) { if (e.target===this) this.classList.remove('show'); });
+
+g('saveEdit').addEventListener('click', function() {
+  var payload = {
+    email:      g('eEmail').value.trim(),
+    name:       g('eName').value.trim(),
+    phone:      g('ePhone').value.trim(),
+    department: g('eDept').value.trim(),
+    city:       g('eCity').value,
+    role:       g('eRole').value
+  };
+  var pw = g('ePass').value;
+  if (pw) payload.new_password = pw;
+  if (!payload.name)  { toast('Name cannot be empty.'); return; }
+  if (!payload.email) { toast('Email cannot be empty.'); return; }
+
+  fetch('/api/auth/me', {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.user) {
+      Object.assign(user, payload);
+      localStorage.setItem('qc_user', JSON.stringify(user));
+      renderProfile();
+      g('editModal').classList.remove('show');
+      toast('Profile updated successfully!');
+    } else {
+      toast(d.detail || 'Update failed.');
+    }
+  })
+  .catch(function() { toast('Server error.'); });
+});
+
+/* sign out modal */
+g('signOutBtn').addEventListener('click',    function() { g('signOutModal').classList.add('show'); });
+g('cancelSignOut').addEventListener('click', function() { g('signOutModal').classList.remove('show'); });
+g('signOutModal').addEventListener('click',  function(e) { if (e.target===this) this.classList.remove('show'); });
+g('confirmSignOut').addEventListener('click', function() {
+  localStorage.clear();
+  window.location.replace('/login.html');
+});
+
+/* init */
+renderProfile();
+loadMyProducts();
+
+/* Navbar Search */
+var searchBtn = g('nav-search-btn');
+var searchInput = g('nav-search-input');
+if (searchBtn && searchInput) {
+  searchBtn.addEventListener('click', function() {
+    var q = searchInput.value.trim();
+    if (q) window.location.href = "/marketplace.html?search=" + encodeURIComponent(q);
+  });
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === "Enter") {
+      var q = this.value.trim();
+      if (q) window.location.href = "/marketplace.html?search=" + encodeURIComponent(q);
+    }
+  });
+}
+</script>
+</body>
+</html>

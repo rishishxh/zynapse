@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Product - ZYNAPSE</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css?v=4">
+<link rel="stylesheet" href="/static/style-oracle.css?v=4">
+  <link rel="stylesheet" href="/static/style-dark-theme.css?v=5">
+<style>
+.page-hero {
+  background: rgba(255, 255, 255, 0.025);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 60px 0;
+  color: #fff;
+}
+.page-hero h1 { font-size: 2.3rem; font-weight: 500; }
+.page-hero p  { color: rgba(255, 255, 255, 0.45); }
+.form-card { 
+  background: rgba(255, 255, 255, 0.04); 
+  backdrop-filter: blur(24px); 
+  border: 1px solid rgba(255, 255, 255, 0.08); 
+  border-radius: 14px; 
+  padding: 32px; 
+  max-width: 720px; 
+  margin: 0 auto; 
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3); 
+}
+.form-card h5 { font-size: 1.1rem; font-weight: 600; color: #ffffff; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+.fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.fgrid .full { grid-column: 1/-1; }
+.fgroup { margin-bottom: 4px; }
+.fgroup label { display: block; font-size: .75rem; font-weight: 600; text-transform: uppercase; color: rgba(255, 255, 255, 0.8); margin-bottom: 6px; }
+.fgroup input, .fgroup select, .fgroup textarea { 
+  width: 100%; padding: 10px 14px; 
+  border: 1px solid rgba(255, 255, 255, 0.1); 
+  border-radius: 8px; font-size: .875rem; 
+  background: rgba(255, 255, 255, 0.05); color: #fff; 
+  transition: border-color .2s; 
+}
+.fgroup select option { background: #1e293b; color: #fff; }
+.fgroup input:focus, .fgroup select:focus, .fgroup textarea:focus { outline: none; border-color: #6366f1; background: rgba(255, 255, 255, 0.1); }
+.msg-err { display: none; background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); border-radius: 8px; padding: 10px 14px; font-size: .85rem; margin-bottom: 14px; }
+.msg-ok  { display: none; background: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); border-radius: 8px; padding: 10px 14px; font-size: .85rem; margin-bottom: 14px; }
+.img-upload-box {
+  border: 2px dashed rgba(255, 255, 255, 0.2); border-radius: 10px; padding: 24px;
+  text-align: center; cursor: pointer; transition: border-color .2s; background: rgba(255, 255, 255, 0.02);
+}
+.img-upload-box:hover { border-color: #6366f1; background: rgba(255, 255, 255, 0.05); }
+.img-upload-box i { font-size:2rem; color:#9ca3af; display:block; margin-bottom:8px; }
+.img-upload-box p { font-size:.85rem; color: #ffffff; margin:0; }
+.img-preview { width:100%; max-height:200px; object-fit:contain; border-radius:8px; display:none; margin-top:12px; }
+</style>
+</head>
+<body>
+
+<nav class="qc-navbar">
+  <div class="container d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-4">
+      <a href="/index.html" class="navbar-brand logo-text"><strong>ZYNAPSE</strong></a>
+      <ul class="qc-nav-links d-flex gap-3 mb-0">
+        <li><a href="/marketplace.html">Marketplace</a></li>
+        <li><a href="/demand_trends.html">Demand Trends</a></li>
+        <li><a href="/predictions.html">Predictions</a></li>
+        <li><a href="/inventory.html">Inventory</a></li>
+        <li><a href="/category_analysis.html">Category Analysis</a></li>
+      </ul>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <a href="/checkout.html" class="icon-btn" style="color:#ffffff;font-size:1.3rem;position:relative;"><i class="bi bi-cart3"></i><span id="navCartCount" style="position:absolute; top:-5px; right:-10px; background:#ef4444; color:white; font-size:0.65rem; padding:2px 5px; border-radius:10px; font-weight:bold; display:none;">0</span></a>
+      <div style="position:relative;" id="profileDropdown">
+        <img id="navAvatar" src="https://ui-avatars.com/api/?name=U&background=6366f1&color=fff&rounded=true" class="nav-avatar" style="cursor:pointer;">
+        <div id="profileMenu" class="profile-menu">
+          <div class="profile-menu-header"><div class="pm-name" id="pmName">User</div><div class="pm-email" id="pmEmail">--</div></div>
+          <a href="/profile.html" class="profile-menu-item"><i class="bi bi-person-circle"></i> My Profile</a>
+          <a href="/my_products.html" class="profile-menu-item"><i class="bi bi-box-seam"></i> My Products</a>
+          <a href="/add_product.html" class="profile-menu-item"><i class="bi bi-plus-circle"></i> Add Product</a>
+          <a href="/predictions.html" class="profile-menu-item"><i class="bi bi-cpu"></i> AI Predictions</a>
+          <div class="profile-menu-divider"></div>
+          <a href="#" class="profile-menu-item danger" id="navSignOut"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="oracle-main-container">
+  <section class="page-hero">
+    <div class="container">
+      <div class="badge-pill mb-2"><i class="bi bi-plus-circle"></i> ADD PRODUCT</div>
+      <h1>Add Your Product</h1>
+      <p>List your product on ZYNAPSE marketplace</p>
+    </div>
+  </section>
+
+  <div class="container py-4">
+    <div class="form-card">
+      <h5><i class="bi bi-box-seam me-2"></i>Product Details</h5>
+
+      <div class="msg-err" id="errBox"></div>
+      <div class="msg-ok"  id="okBox"></div>
+
+      <div class="fgrid">
+
+        <div class="full fgroup">
+          <label>Product Title *</label>
+          <input type="text" id="pTitle" placeholder="e.g. Nike Men Running Shoes">
+        </div>
+
+        <div class="fgroup">
+          <label>Category *</label>
+          <select id="pCat"><option value="">Loading...</option></select>
+        </div>
+
+        <div class="fgroup">
+          <label>Price (&#8377;) *</label>
+          <input type="number" id="pPrice" placeholder="0.00" step="0.01" min="0">
+        </div>
+
+        <div class="fgroup">
+          <label>Star Rating (1-5)</label>
+          <input type="number" id="pStars" placeholder="4.5" step="0.1" min="1" max="5" value="4.0">
+        </div>
+
+        <div class="fgroup">
+          <label>Bought Last Month</label>
+          <input type="number" id="pBought" placeholder="0" min="0" value="0">
+        </div>
+
+        <div class="full fgroup">
+          <label>Description</label>
+          <textarea id="pDesc" rows="3" placeholder="Product description..."></textarea>
+        </div>
+
+        <!-- IMAGE UPLOAD -->
+        <div class="full fgroup">
+          <label>Product Image</label>
+          <div class="img-upload-box" id="uploadBox" onclick="document.getElementById('pImage').click()">
+            <i class="bi bi-cloud-arrow-up"></i>
+            <p>Click to upload image (JPG, PNG, WebP)</p>
+            <p style="font-size:.75rem;color:#9ca3af;">Max 5MB</p>
+          </div>
+          <input type="file" id="pImage" accept=".jpg,.jpeg,.png,.webp" style="display:none;">
+          <img id="imgPreview" class="img-preview" alt="Preview">
+          <div id="imgName" style="font-size:.75rem;color: #ffffff;margin-top:6px;"></div>
+        </div>
+
+        <div class="full fgroup">
+          <div class="d-flex align-items-center gap-2">
+            <input type="checkbox" id="pBS" style="width:18px;height:18px;accent-color: #ffffff;">
+            <label for="pBS" class="mb-0" style="text-transform:none;font-weight:600;font-size:.875rem;">Mark as Best Seller</label>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="d-flex gap-2 justify-content-end mt-4">
+        <a href="/profile.html" class="btn btn-outline-secondary">Cancel</a>
+        <button class="btn btn-primary" id="submitBtn">
+          <i class="bi bi-check-circle me-1"></i>Add Product
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="qc-footer text-center"><p>&copy; 2026 ZYNAPSE Systems</p></footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+var raw = localStorage.getItem('qc_user');
+if (!raw) { window.location.replace('/login.html'); }
+var user = JSON.parse(raw || '{}');
+
+/* set nav avatar from user */
+var initials = (user.name || 'U').charAt(0).toUpperCase();
+document.getElementById('navAvatar').src =
+  'https://ui-avatars.com/api/?name=' + encodeURIComponent(initials) + '&background=6366f1&color=fff&rounded=true';
+
+function g(id) { return document.getElementById(id); }
+function showErr(m) { var e=g('errBox'); e.textContent=m; e.style.display='block'; g('okBox').style.display='none'; }
+function showOk(m)  { var e=g('okBox');  e.textContent=m; e.style.display='block'; g('errBox').style.display='none'; }
+
+/* load categories */
+fetch('/api/categories')
+.then(function(r){return r.json();})
+.then(function(d){
+  var cats = d.data || [];
+  var sel = g('pCat');
+  sel.innerHTML = '<option value="">Select category</option>' +
+    cats.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+}).catch(function(){});
+
+/* image preview */
+g('pImage').addEventListener('change', function() {
+  var file = this.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { showErr('Image must be under 5MB.'); this.value=''; return; }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var prev = g('imgPreview');
+    prev.src = e.target.result;
+    prev.style.display = 'block';
+    g('uploadBox').style.borderColor = '#6366f1';
+  };
+  reader.readAsDataURL(file);
+  g('imgName').textContent = file.name;
+});
+
+/* submit */
+g('submitBtn').addEventListener('click', function() {
+  g('errBox').style.display = 'none';
+  g('okBox').style.display  = 'none';
+
+  var title  = g('pTitle').value.trim();
+  var cat    = g('pCat').value;
+  var price  = parseFloat(g('pPrice').value) || 0;
+  var stars  = parseFloat(g('pStars').value) || 0;
+  var bought = parseInt(g('pBought').value)  || 0;
+  var desc   = g('pDesc').value.trim();
+  var bs     = g('pBS').checked;
+
+  if (!title)          { showErr('Product title is required.'); return; }
+  if (!cat)            { showErr('Please select a category.'); return; }
+  if (price <= 0)      { showErr('Price must be greater than 0.'); return; }
+  if (stars<1||stars>5){ showErr('Stars must be between 1 and 5.'); return; }
+
+  var btn = this;
+  btn.textContent = 'Adding...'; btn.disabled = true;
+
+  /* step 1: create product record */
+  fetch('/api/user/products', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      owner_email: user.email || '',
+      title: title, categoryName: cat,
+      price: price, stars: stars,
+      boughtInLastMonth: bought,
+      isBestSeller: bs, description: desc
+    })
+  })
+  .then(function(r) { return r.json().then(function(d) { return {ok:r.ok, d:d}; }); })
+  .then(function(res) {
+    if (!res.ok) { showErr(res.d.detail || 'Failed to add product.'); return; }
+    var productId = res.d.product.id;
+
+    /* step 2: upload image if selected */
+    var imgFile = g('pImage').files[0];
+    if (imgFile) {
+      var fd = new FormData();
+      fd.append('file', imgFile);
+      fd.append('product_id', productId);
+      fd.append('email', user.email || '');
+      return fetch('/api/upload-product-image', { method:'POST', body:fd })
+        .then(function() {
+          showOk('Product added with image! Redirecting...');
+          setTimeout(function() { window.location.href = '/my_products.html'; }, 1500);
+        });
+    } else {
+      showOk('Product added! Redirecting...');
+      setTimeout(function() { window.location.href = '/my_products.html'; }, 1500);
+    }
+  })
+  .catch(function() { showErr('Server error.'); })
+  .finally(function() { btn.textContent = 'Add Product'; btn.disabled = false; });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Dashboard - ZYNAPSE</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+  <!-- ✅ FIXED CSS PATHS -->
+  <link rel="stylesheet" href="/static/style.css?v=4">
+  <link rel="stylesheet" href="/static/style-oracle.css?v=4">
+  <link rel="stylesheet" href="/static/style-dark-theme.css?v=5">
+  <link rel="stylesheet" href="/static/style-dark-theme.css?v=5">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+
+<!-- ===== NAVBAR (MATCH ALL PAGES) ===== -->
+<nav class="qc-navbar">
+  <div class="container d-flex align-items-center justify-content-between">
+
+    <div class="d-flex align-items-center gap-4">
+
+      <a href="/index.html" class="navbar-brand logo-text">
+        <strong>ZYNAPSE</strong>
+      </a>
+
+      <ul class="qc-nav-links d-flex gap-3 mb-0 p-0">
+        <li><a href="/index.html" class="active">Dashboard</a></li>
+        <li><a href="/marketplace.html">Marketplace</a></li>
+        <li><a href="/demand_trends.html">Demand Trends</a></li>
+        <li><a href="/predictions.html">Predictions</a></li>
+        <li><a href="/inventory.html">Inventory</a></li>
+      </ul>
+
+    </div>
+
+    <div class="d-flex align-items-center gap-3">
+
+      <div class="search-box d-flex align-items-center gap-2">
+        <input type="text" class="form-control"
+          placeholder="Search insights..."
+          style="border-radius: 20px; min-width: 280px; padding-left: 1rem;">
+
+        <button class="btn btn-primary"
+          style="height: 40px; border-radius: 20px; padding: 0 1.5rem; font-weight: 600;">
+          Search
+        </button>
+      </div>
+
+      <div class="nav-icons d-flex gap-3">
+        <a href="/checkout.html" class="icon-btn" style="color:#ffffff;font-size:1.3rem;position:relative;"><i class="bi bi-cart3"></i><span id="navCartCount" style="position:absolute; top:-5px; right:-10px; background:#ef4444; color:white; font-size:0.65rem; padding:2px 5px; border-radius:10px; font-weight:bold; display:none;">0</span></a>
+        <div style="position:relative;" id="profileDropdown">
+          <img id="navAvatar" src="https://ui-avatars.com/api/?name=U&background=6366f1&color=fff&rounded=true" class="nav-avatar" style="cursor:pointer;">
+          <div id="profileMenu" class="profile-menu">
+            <div class="profile-menu-header"><div class="pm-name" id="pmName">User</div><div class="pm-email" id="pmEmail">--</div></div>
+            <a href="/profile.html" class="profile-menu-item"><i class="bi bi-person-circle"></i> My Profile</a>
+            <a href="/my_products.html" class="profile-menu-item"><i class="bi bi-box-seam"></i> My Products</a>
+            <a href="/add_product.html" class="profile-menu-item"><i class="bi bi-plus-circle"></i> Add Product</a>
+            <a href="/predictions.html" class="profile-menu-item"><i class="bi bi-cpu"></i> AI Predictions</a>
+            <div class="profile-menu-divider"></div>
+            <a href="#" class="profile-menu-item danger" id="navSignOut"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</nav>
+
+<style>
+  /* ── SPLASH SECTION ── */
+  .splash-section {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(ellipse 80% 60% at 25% 30%, rgba(99,102,241,0.12) 0%, transparent 70%),
+      radial-gradient(ellipse 70% 50% at 75% 70%, rgba(124,58,237,0.09) 0%, transparent 70%),
+      radial-gradient(ellipse 90% 70% at 50% 50%, rgba(59,130,246,0.05) 0%, transparent 60%),
+      #020617;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  /* grid lines background */
+  .splash-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  }
+
+  /* main title */
+  .splash-title {
+    position: relative;
+    z-index: 2;
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #fff;
+    text-align: center;
+    line-height: 1.05;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: slowFade 2.5s ease 0.3s forwards;
+  }
+
+  .splash-title span {
+    display: block;
+    background: linear-gradient(135deg, #fff 0%, #c4b5fd 40%, #818cf8 70%, #6366f1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* glow behind text */
+  .splash-title::after {
+    content: 'ZYNAPSE SYSTEMS';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    font-size: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    text-align: center;
+    line-height: inherit;
+    color: transparent;
+    -webkit-text-stroke: 0;
+    filter: blur(40px);
+    background: linear-gradient(135deg, #6366f1, #7c3aed);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    opacity: 0;
+    animation: glowIn 3s ease 1.5s forwards;
+  }
+
+  @keyframes slowFade {
+    0%   { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes glowIn {
+    0%   { opacity: 0; }
+    100% { opacity: 0.5; }
+  }
+
+  /* tagline */
+  .splash-tagline {
+    position: relative;
+    z-index: 2;
+    font-family: 'Outfit', sans-serif;
+    color: rgba(255,255,255,0.35);
+    font-size: clamp(0.85rem, 1.5vw, 1.05rem);
+    font-weight: 300;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-top: 24px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.8s ease 1.2s forwards;
+  }
+
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* decorative line */
+  .splash-line {
+    position: relative;
+    z-index: 2;
+    width: 80px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #6366f1, transparent);
+    margin-top: 24px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 1.4s forwards;
+  }
+
+  /* scroll indicator */
+  .splash-scroll {
+    position: absolute;
+    bottom: 40px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 1.8s forwards;
+  }
+  .splash-scroll span {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    font-weight: 600;
+  }
+  .scroll-mouse {
+    width: 22px;
+    height: 34px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    position: relative;
+  }
+  .scroll-mouse::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 8px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 3px;
+    animation: scrollDot 1.8s ease-in-out infinite;
+  }
+  @keyframes scrollDot {
+    0%, 100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    50%      { opacity: 0.3; transform: translateX(-50%) translateY(10px); }
+  }
+</style>
+
+<!-- ===== SPLASH LANDING ===== -->
+<section class="splash-section">
+  <div class="splash-grid"></div>
+  <div class="splash-title">
+    <span>ZYNAPSE SYSTEMS</span>
+  </div>
+  <div class="splash-tagline">AI-Powered Demand Intelligence</div>
+  <div class="splash-line"></div>
+  <div class="splash-scroll">
+    <span>Scroll</span>
+    <div class="scroll-mouse"></div>
+  </div>
+</section>
+
+<!-- ===== DASHBOARD HERO ===== -->
+<section class="oracle-hero">
+  <div class="oracle-hero-container">
+
+    <div class="oracle-hero-left">
+      <div class="oracle-hero-badge">AI Intelligence Dashboard</div>
+
+      <h1 class="oracle-hero-title">
+        Real-Time <span class="oracle-hero-highlight">Commerce Insights</span>
+      </h1>
+
+      <p class="oracle-hero-subtitle">
+        Monitor demand trends, predict best sellers, and optimize inventory using AI-driven analytics.
+      </p>
+
+      <div class="oracle-hero-actions">
+        <a href="/demand_trends.html" class="oracle-btn-primary">View Analytics</a>
+        <a href="/predictions.html" class="oracle-btn-secondary">AI Predictions</a>
+      </div>
+    </div>
+
+    <div class="oracle-hero-right">
+      <div class="hero-dynamic-card">
+        <div class="hero-dynamic-header">
+          <span>System Status</span>
+          <span class="hero-dynamic-surge">Live</span>
+        </div>
+        <div style="padding:8px 0;">
+          <p style="margin:6px 0;font-size:.85rem;">&#x1F7E2; AI Engine: Active</p>
+          <p style="margin:6px 0;font-size:.85rem;">&#x1F4CA; Data Pipeline: Running</p>
+          <p style="margin:6px 0;font-size:.85rem;">&#x26A1; Prediction Model: Updated</p>
+          <p style="margin:6px 0;font-size:.85rem;">&#x1F4E6; Inventory Sync: Live</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== DASHBOARD CONTENT ===== -->
+<div class="oracle-main-container">
+
+  <!-- KPI CARDS — live from API -->
+  <section class="oracle-section">
+    <div class="oracle-container">
+
+      <h2>Key Performance Indicators</h2>
+
+      <div class="oracle-grid-dark">
+        <div class="card-dark" style="cursor:pointer;" onclick="location.href='/marketplace.html'">
+          <div class="card-dark-title">Total Products</div>
+          <div class="card-dark-subtitle" id="kpi-total" style="font-size:1.8rem;font-weight:800;color:#fff;">—</div>
+        </div>
+        <div class="card-dark" style="cursor:pointer;" onclick="location.href='/inventory.html'">
+          <div class="card-dark-title">High Demand Items</div>
+          <div class="card-dark-subtitle" id="kpi-high" style="font-size:1.8rem;font-weight:800;color:#fff;">—</div>
+        </div>
+        <div class="card-dark" style="cursor:pointer;" onclick="location.href='/predictions.html'">
+          <div class="card-dark-title">Best Sellers</div>
+          <div class="card-dark-subtitle" id="kpi-bs" style="font-size:1.8rem;font-weight:800;color:#fff;">—</div>
+        </div>
+        <div class="card-dark" style="cursor:pointer;" onclick="location.href='/inventory.html'">
+          <div class="card-dark-title">Reorder Alerts</div>
+          <div class="card-dark-subtitle" id="kpi-alerts" style="font-size:1.8rem;font-weight:800;color:#fff;">—</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- QUICK LINKS -->
+  <section class="oracle-section" style="padding-top:0;">
+    <div class="oracle-container">
+      <h2>Quick Access</h2>
+      <div class="oracle-grid-light">
+        <a href="/marketplace.html" class="card-light" style="text-decoration:none;">
+          <div style="font-size:2rem;margin-bottom:10px;">&#x1F6CD;</div>
+          <div class="card-light-title">Marketplace</div>
+          <div style="font-size:.8rem;color: #ffffff;">Browse 10,000 products</div>
+        </a>
+        <a href="/demand_trends.html" class="card-light" style="text-decoration:none;">
+          <div style="font-size:2rem;margin-bottom:10px;">&#x1F4C8;</div>
+          <div class="card-light-title">Demand Trends</div>
+          <div style="font-size:.8rem;color: #ffffff;">Category intelligence</div>
+        </a>
+        <a href="/predictions.html" class="card-light" style="text-decoration:none;">
+          <div style="font-size:2rem;margin-bottom:10px;">&#x1F916;</div>
+          <div class="card-light-title">AI Predictions</div>
+          <div style="font-size:.8rem;color: #ffffff;">Neural network forecasting</div>
+        </a>
+        <a href="/inventory.html" class="card-light" style="text-decoration:none;">
+          <div style="font-size:2rem;margin-bottom:10px;">&#x1F4E6;</div>
+          <div class="card-light-title">Inventory</div>
+          <div style="font-size:.8rem;color: #ffffff;">Stock monitoring</div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="qc-footer text-center">
+  <p>&copy; 2026 ZYNAPSE Systems</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Load live KPIs
+fetch("/api/stats").then(function(r){return r.json();}).then(function(d){
+  document.getElementById("kpi-total").textContent = d.total_products.toLocaleString();
+  document.getElementById("kpi-bs").textContent    = d.best_sellers.toLocaleString();
+}).catch(function(){});
+fetch("/api/inventory").then(function(r){return r.json();}).then(function(d){
+  var m = d.metrics || {};
+  document.getElementById("kpi-high").textContent   = (m.high_demand || 0).toLocaleString();
+  document.getElementById("kpi-alerts").textContent = (m.reorder_alerts || 0).toLocaleString();
+}).catch(function(){});
+
+// Navbar search
+document.querySelector(".btn.btn-primary").addEventListener("click", function(){
+  var q = document.querySelector("input.form-control").value.trim();
+  if (q) window.location.href = "/marketplace.html?search=" + encodeURIComponent(q);
+});
+document.querySelector("input.form-control").addEventListener("keydown", function(e){
+  if (e.key === "Enter") {
+    var q = this.value.trim();
+    if (q) window.location.href = "/marketplace.html?search=" + encodeURIComponent(q);
+  }
+});
+</script>
+<script src="/static/nav_user.js"></script>

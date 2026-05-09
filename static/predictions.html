@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Predict Demand — ZYNAPSE</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <link rel="stylesheet" href="/static/style.css?v=4">
+  <link rel="stylesheet" href="/static/style-oracle.css?v=4">
+  <link rel="stylesheet" href="/static/style-dark-theme.css?v=5">
+
+  <style>
+    .page-hero {
+      background: rgba(255, 255, 255, 0.025);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 60px 0;
+      color: #fff;
+    }
+    .page-hero h1 { font-size: 2.3rem; font-weight: 500; }
+    .page-hero p  { color: rgba(255,255,255,0.45); }
+
+    .filter-bar {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 16px 0;
+    }
+
+    /* two-column predict layout */
+    .predict-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 768px) {
+      .predict-grid { grid-template-columns: 1fr; }
+    }
+
+    /* form card reuses .chart-card */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 560px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+
+    .form-group label {
+      display: block;
+      font-size: .8rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 5px;
+    }
+    .form-group input:not([type="radio"]),
+    .form-group select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      font-size: .875rem;
+      background: #0f172a;
+      color: #ffffff;
+      transition: border-color .2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #6366f1;
+      background: #1e293b;
+    }
+    .form-group select option {
+      background: #1e293b;
+      color: #ffffff;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    /* result panel */
+    .tip-card {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    }
+    .tip-card h4 { font-size: 1rem; font-weight: 600; margin-bottom: 16px; color: #fff; }
+    .tip-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+      font-size: .875rem;
+      color: #ffffff;
+    }
+    .tip-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #6366f1;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .result-card {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 28px;
+      text-align: center;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    }
+    .result-emoji { font-size: 3rem; margin-bottom: 8px; }
+    .result-lbl   { font-size: .8rem; font-weight: 600; color: #ffffff; text-transform: uppercase; letter-spacing: .5px; }
+    .result-val   { font-size: 2rem; font-weight: 800; margin: 6px 0; }
+    .result-val.high   { color: #ffffff; }
+    .result-val.medium { color: #ffffff; }
+    .result-val.low    { color: #9ca3af; }
+    .result-conf  { font-size: .875rem; color: #ffffff; margin-bottom: 16px; }
+
+    .prob-bars { margin-top: 16px; text-align: left; }
+    .prob-row  { margin-bottom: 10px; }
+    .prob-label { display: flex; justify-content: space-between; font-size: .8rem; font-weight: 600; margin-bottom: 4px; }
+    .prob-track { background: #f3f4f6; border-radius: 99px; height: 8px; overflow: hidden; }
+    .prob-fill  { height: 100%; border-radius: 99px; transition: width .6s ease; }
+    .prob-fill.high   { background: #16a34a; }
+    .prob-fill.medium { background: #2563eb; }
+    .prob-fill.low    { background: #9ca3af; }
+
+    .score-badge {
+      display: inline-block;
+      background: #ede9fe;
+      color: #ffffff;
+      font-size: .75rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 99px;
+      margin-top: 8px;
+    }
+
+    .error-box {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #ffffff;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: .875rem;
+      margin-top: 14px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* loading overlay */
+    .loading-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,.45);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999;
+    }
+    .loader-box {
+      background: #1e293b;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 36px 48px;
+      text-align: center;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 4px solid rgba(255,255,255,0.1);
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="qc-navbar">
+  <div class="container d-flex align-items-center justify-content-between">
+
+    <div class="d-flex align-items-center gap-4">
+      <a href="/index.html" class="navbar-brand logo-text">
+        <strong>ZYNAPSE</strong>
+      </a>
+
+      <ul class="qc-nav-links d-flex gap-3 mb-0">
+        <li><a href="/marketplace.html">Marketplace</a></li>
+        <li><a href="/demand_trends.html">Demand Trends</a></li>
+        <li><a href="/predictions.html" class="active">Predictions</a></li>
+        <li><a href="/inventory.html">Inventory</a></li>
+      </ul>
+    </div>
+
+    <div class="d-flex align-items-center gap-3">
+      <a href="/checkout.html" class="icon-btn" style="color:#ffffff;font-size:1.3rem;position:relative;"><i class="bi bi-cart3"></i><span id="navCartCount" style="position:absolute; top:-5px; right:-10px; background:#ef4444; color:white; font-size:0.65rem; padding:2px 5px; border-radius:10px; font-weight:bold; display:none;">0</span></a>
+      <div style="position:relative;" id="profileDropdown">
+        <img id="navAvatar" src="https://ui-avatars.com/api/?name=U&background=6366f1&color=fff&rounded=true" class="nav-avatar" style="cursor:pointer;">
+        <div id="profileMenu" class="profile-menu">
+          <div class="profile-menu-header"><div class="pm-name" id="pmName">User</div><div class="pm-email" id="pmEmail">--</div></div>
+          <a href="/profile.html" class="profile-menu-item"><i class="bi bi-person-circle"></i> My Profile</a>
+          <a href="/my_products.html" class="profile-menu-item"><i class="bi bi-box-seam"></i> My Products</a>
+          <a href="/add_product.html" class="profile-menu-item"><i class="bi bi-plus-circle"></i> Add Product</a>
+          <a href="/predictions.html" class="profile-menu-item"><i class="bi bi-cpu"></i> AI Predictions</a>
+          <div class="profile-menu-divider"></div>
+          <a href="#" class="profile-menu-item danger" id="navSignOut"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</nav>
+
+
+<div class="oracle-main-container">
+
+  <!-- HERO -->
+  <section class="page-hero">
+    <div class="container">
+      <div class="badge-pill mb-2">
+        <i class="bi bi-cpu"></i> DEEP LEARNING MODEL
+      </div>
+      <h1>Demand Prediction</h1>
+      <p>Enter product details — the Deep Learning model predicts demand level instantly.</p>
+    </div>
+  </section>
+
+  <!-- FILTER BAR (sample / reset actions) -->
+  <div class="filter-bar">
+    <div class="container d-flex flex-wrap gap-3 align-items-center">
+      <span class="text-white-50" style="font-size:.85rem;">Quick actions</span>
+      <button id="fillSample" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-lightning-charge"></i> Fill sample data
+      </button>
+      <button id="resetBtn" class="btn btn-outline-danger btn-sm">
+        <i class="bi bi-arrow-counterclockwise"></i> Reset
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="container py-4">
+
+    <!-- STAT CARDS (filled after prediction) -->
+    <div class="row g-3 mb-4" id="statRow" style="display:none !important;">
+      <div class="col-md-3">
+        <div class="card-dark p-3 text-center" style="border-radius: 12px;">
+          <div id="s-level" class="stat-val fs-3 fw-bold text-white">—</div>
+          <div class="text-white-50">Demand Level</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card-dark p-3 text-center" style="border-radius: 12px;">
+          <div id="s-conf" class="stat-val fs-3 fw-bold text-white">—</div>
+          <div class="text-white-50">Confidence</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card-dark p-3 text-center" style="border-radius: 12px;">
+          <div id="s-score" class="stat-val fs-3 fw-bold text-white">—</div>
+          <div class="text-white-50">Demand Score</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card-dark p-3 text-center" style="border-radius: 12px;">
+          <div id="s-cat" class="stat-val fs-4 fw-bold text-white">—</div>
+          <div class="text-white-50">Category</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TWO-COLUMN GRID -->
+    <div class="predict-grid">
+
+      <!-- LEFT: FORM -->
+      <div class="card-dark p-4">
+        <h5 class="mb-3 text-white">
+          <i class="bi bi-stars me-1 text-white"></i> Product Details
+        </h5>
+
+        <form id="predictForm" novalidate>
+          <div class="form-grid">
+
+            <div class="form-group">
+              <label for="price">Price (₹)</label>
+              <input type="number" id="price" placeholder="e.g. 1299" min="1" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+              <label for="stars">Star Rating (1–5)</label>
+              <input type="number" id="stars" placeholder="e.g. 4.2" min="1" max="5" step="0.1" required>
+            </div>
+
+            <div class="form-group">
+              <label for="boughtInLastMonth">Bought Last Month</label>
+              <input type="number" id="boughtInLastMonth" placeholder="e.g. 250" min="0" required>
+            </div>
+
+            <div class="form-group">
+              <label for="categoryName">Category</label>
+              <select id="categoryName" required>
+                <option value="">Loading…</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="grid-column: span 2;">
+              <label>Best Seller?</label>
+              <div class="d-flex gap-3 mt-1">
+                <label class="d-flex align-items-center gap-2" style="font-weight:400; font-size:.875rem;">
+                  <input type="radio" name="isBestSeller" value="true"> Yes
+                </label>
+                <label class="d-flex align-items-center gap-2" style="font-weight:400; font-size:.875rem;">
+                  <input type="radio" name="isBestSeller" value="false" checked> No
+                </label>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-cpu me-1"></i> Run Prediction →
+            </button>
+          </div>
+        </form>
+
+        <div class="error-box" id="errorBox" style="display:none;">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span id="errorMsg"></span>
+        </div>
+      </div>
+
+      <!-- RIGHT: RESULT -->
+      <div id="resultPanel">
+
+        <!-- Tip card (before prediction) -->
+        <div class="tip-card" id="tipCard">
+          <h4><i class="bi bi-info-circle me-1" style="color: #ffffff;"></i> How it works</h4>
+          <div class="tip-item"><div class="tip-dot"></div><span>Fill in the product details on the left.</span></div>
+          <div class="tip-item"><div class="tip-dot"></div><span>The Deep Learning model is trained on your full product dataset.</span></div>
+          <div class="tip-item"><div class="tip-dot"></div><span>Features: price, stars, units bought, category, best-seller flag.</span></div>
+          <div class="tip-item"><div class="tip-dot"></div><span>You get a demand level (High / Medium / Low) with confidence scores.</span></div>
+          <div class="tip-item"><div class="tip-dot"></div><span>Use "Fill sample data" to try it instantly.</span></div>
+        </div>
+
+        <!-- Result card (after prediction) -->
+        <div class="result-card" id="resultCard" style="display:none;">
+          <div class="result-emoji" id="resultEmoji"></div>
+          <div class="result-lbl">Predicted Demand Level</div>
+          <div class="result-val" id="resultVal"></div>
+          <div class="result-conf">Confidence: <strong id="resultConf"></strong></div>
+          <div class="score-badge" id="resultScore"></div>
+
+          <div class="prob-bars" id="probBars"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CHART (shown after prediction) -->
+    <div class="card-dark mt-4 p-4" id="chartCard" style="display:none;">
+      <h5 class="text-white">Probability Distribution</h5>
+      <div style="position:relative; height:260px;">
+        <canvas id="probChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="qc-footer text-center">
+    <p>&copy; 2026 ZYNAPSE Systems</p>
+  </footer>
+
+</div>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay" style="display:none;">
+  <div class="loader-box">
+    <div class="spinner"></div>
+    <p style="margin:0; font-weight:600; color: #ffffff;">Running prediction…</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const BASE_URL = "";
+let probChartInst;
+
+/* ── populate category dropdown ── */
+async function loadCategories() {
+  const res  = await fetch(BASE_URL + "/api/categories");
+  const data = await res.json();
+  const sel  = document.getElementById("categoryName");
+  sel.innerHTML = '<option value="">Select…</option>';
+  (data.data || []).forEach(c => {
+    const o = document.createElement("option");
+    o.value = c; o.textContent = c;
+    sel.appendChild(o);
+  });
+}
+
+/* ── sample data ── */
+document.getElementById("fillSample").addEventListener("click", () => {
+  document.getElementById("price").value            = "1299";
+  document.getElementById("stars").value            = "4.3";
+  document.getElementById("boughtInLastMonth").value = "320";
+  const sel = document.getElementById("categoryName");
+  // pick first real option
+  if (sel.options.length > 1) sel.selectedIndex = 1;
+  document.querySelector('input[name="isBestSeller"][value="false"]').checked = true;
+});
+
+/* ── reset ── */
+document.getElementById("resetBtn").addEventListener("click", () => {
+  document.getElementById("predictForm").reset();
+  document.getElementById("errorBox").style.display   = "none";
+  document.getElementById("tipCard").style.display    = "block";
+  document.getElementById("resultCard").style.display = "none";
+  document.getElementById("chartCard").style.display  = "none";
+  document.getElementById("statRow").style.display    = "none";
+  loadCategories();
+});
+
+/* ── form submit ── */
+document.getElementById("predictForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const price   = parseFloat(document.getElementById("price").value);
+  const stars   = parseFloat(document.getElementById("stars").value);
+  const bought  = parseInt(document.getElementById("boughtInLastMonth").value);
+  const cat     = document.getElementById("categoryName").value;
+  const bsVal   = document.querySelector('input[name="isBestSeller"]:checked').value;
+
+  const errBox  = document.getElementById("errorBox");
+  const errMsg  = document.getElementById("errorMsg");
+
+  // client-side validation
+  if (!price || price <= 0)          { showErr("Price must be greater than 0."); return; }
+  if (!stars || stars < 1 || stars > 5) { showErr("Star rating must be between 1 and 5."); return; }
+  if (isNaN(bought) || bought < 0)   { showErr("Bought last month must be 0 or more."); return; }
+  if (!cat)                          { showErr("Please select a category."); return; }
+
+  errBox.style.display = "none";
+  document.getElementById("loadingOverlay").style.display = "flex";
+
+  try {
+    const res = await fetch(BASE_URL + "/api/predict", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        price,
+        stars,
+        boughtInLastMonth: bought,
+        isBestSeller:      bsVal === "true",
+        categoryName:      cat,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      showErr(err.detail || "Prediction failed.");
+      return;
+    }
+
+    const data = await res.json();
+    renderResult(data, cat);
+
+  } catch (err) {
+    showErr("Could not reach the server. Is it running?");
+  } finally {
+    document.getElementById("loadingOverlay").style.display = "none";
+  }
+});
+
+function showErr(msg) {
+  document.getElementById("loadingOverlay").style.display = "none";
+  const box = document.getElementById("errorBox");
+  document.getElementById("errorMsg").textContent = msg;
+  box.style.display = "flex";
+}
+
+function renderResult(data, cat) {
+  const level = data.demand_level;
+  const conf  = data.confidence;
+  const score = data.demand_score;
+  const probs = data.probabilities || {};
+
+  const emoji = level === "High" ? "🚀" : level === "Medium" ? "📈" : "📉";
+  const cls   = level.toLowerCase();
+
+  // stat row
+  document.getElementById("s-level").textContent = level;
+  document.getElementById("s-conf").textContent  = conf + "%";
+  document.getElementById("s-score").textContent = score;
+  document.getElementById("s-cat").textContent   = cat;
+  document.getElementById("statRow").style.cssText = "display:flex !important;";
+
+  // result card
+  document.getElementById("tipCard").style.display    = "none";
+  document.getElementById("resultCard").style.display = "block";
+  document.getElementById("resultEmoji").textContent  = emoji;
+
+  const valEl = document.getElementById("resultVal");
+  valEl.textContent = level;
+  valEl.className   = "result-val " + cls;
+
+  document.getElementById("resultConf").textContent  = conf + "%";
+  document.getElementById("resultScore").textContent = "Demand Score: " + score;
+
+  // probability bars
+  const bars = document.getElementById("probBars");
+  bars.innerHTML = ["High","Medium","Low"].map(lbl => {
+    const pct = probs[lbl] ?? 0;
+    return `
+      <div class="prob-row">
+        <div class="prob-label"><span>${lbl}</span><span>${pct}%</span></div>
+        <div class="prob-track">
+          <div class="prob-fill ${lbl.toLowerCase()}" style="width:${pct}%"></div>
+        </div>
+      </div>`;
+  }).join("");
+
+  // chart
+  document.getElementById("chartCard").style.display = "block";
+  const ctx = document.getElementById("probChart");
+  if (probChartInst) probChartInst.destroy();
+  probChartInst = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["High", "Medium", "Low"],
+      datasets: [{
+        label: "Probability (%)",
+        data:  [probs["High"] ?? 0, probs["Medium"] ?? 0, probs["Low"] ?? 0],
+        backgroundColor: ["#16a34a", "#2563eb", "#9ca3af"],
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, max: 100,
+             ticks: { callback: v => v + "%" } }
+      }
+    }
+  });
+}
+
+/* ── init ── */
+loadCategories();
+</script>
+
+<script src="/static/nav_user.js"></script>
+</body>
+</html>

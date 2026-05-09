@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Products - ZYNAPSE</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="/static/style.css?v=4">
+<link rel="stylesheet" href="/static/style-oracle.css?v=4">
+  <link rel="stylesheet" href="/static/style-dark-theme.css?v=5">
+<style>
+.page-hero {
+  background: rgba(255, 255, 255, 0.025);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 60px 0;
+  color: #fff;
+}
+.page-hero h1 { font-size: 2.3rem; font-weight: 500; }
+.page-hero p  { color: rgba(255, 255, 255, 0.45); }
+.pcard { 
+  background: rgba(255, 255, 255, 0.04); 
+  backdrop-filter: blur(20px); 
+  border: 1px solid rgba(255, 255, 255, 0.08); 
+  border-radius: 14px; 
+  padding: 24px; 
+  margin-bottom: 24px; 
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2); 
+}
+.pcard h5 { font-size: 1rem; font-weight: 600; color: #ffffff; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+.stat-mini { 
+  background: rgba(255, 255, 255, 0.04); 
+  backdrop-filter: blur(10px); 
+  border: 1px solid rgba(255, 255, 255, 0.08); 
+  border-radius: 10px; 
+  padding: 14px; 
+  text-align: center; 
+}
+.stat-mini .v { font-size: 1.5rem; font-weight: 700; color: #ffffff; }
+.stat-mini .l { font-size: .7rem; color: rgba(255, 255, 255, 0.6); text-transform: uppercase; margin-top: 2px; }
+.prod-img { width: 100%; height: 160px; object-fit: contain; background: rgba(255, 255, 255, 0.02); border-radius: 8px; }
+.demand-pill { display: inline-block; font-size: .7rem; font-weight: 600; padding: 2px 8px; border-radius: 99px; text-transform: uppercase; }
+.dp-high   { background: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); }
+.dp-medium { background: rgba(96, 165, 250, 0.15); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.3); }
+.dp-low    { background: rgba(255, 255, 255, 0.05); color: #d1d5db; border: 1px solid rgba(255, 255, 255, 0.1); }
+.del-btn { background: none; border: none; color: #9ca3af; font-size: .8rem; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+.del-btn:hover { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+.card { background: rgba(255, 255, 255, 0.04) !important; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08) !important; }
+</style>
+</head>
+<body>
+
+<nav class="qc-navbar">
+  <div class="container d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-4">
+      <a href="/index.html" class="navbar-brand logo-text"><strong>ZYNAPSE</strong></a>
+      <ul class="qc-nav-links d-flex gap-3 mb-0">
+        <li><a href="/marketplace.html">Marketplace</a></li>
+        <li><a href="/demand_trends.html">Demand Trends</a></li>
+        <li><a href="/predictions.html">Predictions</a></li>
+        <li><a href="/inventory.html">Inventory</a></li>
+        <li><a href="/category_analysis.html">Category Analysis</a></li>
+      </ul>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <a href="/checkout.html" class="icon-btn" style="color:#ffffff;font-size:1.3rem;position:relative;"><i class="bi bi-cart3"></i><span id="navCartCount" style="position:absolute; top:-5px; right:-10px; background:#ef4444; color:white; font-size:0.65rem; padding:2px 5px; border-radius:10px; font-weight:bold; display:none;">0</span></a>
+      <div style="position:relative;" id="profileDropdown">
+        <img id="navAvatar" src="https://ui-avatars.com/api/?name=U&background=6366f1&color=fff&rounded=true" class="nav-avatar" style="cursor:pointer;">
+        <div id="profileMenu" class="profile-menu">
+          <div class="profile-menu-header"><div class="pm-name" id="pmName">User</div><div class="pm-email" id="pmEmail">--</div></div>
+          <a href="/profile.html" class="profile-menu-item"><i class="bi bi-person-circle"></i> My Profile</a>
+          <a href="/my_products.html" class="profile-menu-item"><i class="bi bi-box-seam"></i> My Products</a>
+          <a href="/add_product.html" class="profile-menu-item"><i class="bi bi-plus-circle"></i> Add Product</a>
+          <a href="/predictions.html" class="profile-menu-item"><i class="bi bi-cpu"></i> AI Predictions</a>
+          <div class="profile-menu-divider"></div>
+          <a href="#" class="profile-menu-item danger" id="navSignOut"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="oracle-main-container">
+  <section class="page-hero">
+    <div class="container">
+      <div class="badge-pill mb-2"><i class="bi bi-box-seam"></i> MY PRODUCTS</div>
+      <h1 id="heroTitle">My Products</h1>
+      <p id="heroSub">Your listed products and demand analysis</p>
+    </div>
+  </section>
+
+  <div class="container py-4">
+
+    <!-- STATS ROW -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3"><div class="stat-mini"><div class="v" id="stCount">0</div><div class="l">Total Products</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-mini"><div class="v" id="stHigh">0</div><div class="l">High Demand</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-mini"><div class="v" id="stAvgScore">0</div><div class="l">Avg Score</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-mini"><div class="v" id="stAvgPrice">0</div><div class="l">Avg Price</div></div></div>
+    </div>
+
+    <!-- CHARTS ROW -->
+    <div class="row g-4 mb-4" id="chartsRow" style="display:none;">
+      <div class="col-md-6">
+        <div class="pcard">
+          <h5>Demand Level Distribution</h5>
+          <div style="position:relative;height:220px;">
+            <canvas id="demandChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="pcard">
+          <h5>Price vs Demand Score</h5>
+          <div style="position:relative;height:220px;">
+            <canvas id="priceChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS GRID -->
+    <div class="pcard">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="mb-0"><i class="bi bi-grid me-2"></i>All My Products</h5>
+        <a href="/add_product.html" class="btn btn-primary btn-sm">
+          <i class="bi bi-plus-lg me-1"></i>Add Product
+        </a>
+      </div>
+      <div id="productsGrid" class="row g-3">
+        <div class="col-12 text-center py-5">
+          <div class="spinner-border text-primary"></div>
+          <p class="mt-2 text-white-50">Loading your products...</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <footer class="qc-footer text-center"><p>&copy; 2026 ZYNAPSE Systems</p></footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+var raw = localStorage.getItem('qc_user');
+if (!raw) { window.location.replace('/login.html'); }
+var user = JSON.parse(raw || '{}');
+
+var initials = (user.name || 'U').charAt(0).toUpperCase();
+document.getElementById('navAvatar').src =
+  'https://ui-avatars.com/api/?name=' + encodeURIComponent(initials) + '&background=6366f1&color=fff&rounded=true';
+document.getElementById('heroTitle').textContent = (user.name || 'My') + "'s Products";
+document.getElementById('heroSub').textContent   = 'Products listed by ' + (user.name || 'you');
+
+function g(id) { return document.getElementById(id); }
+
+function demandLevel(score) {
+  if (score >= 60) return 'High';
+  if (score >= 35) return 'Medium';
+  return 'Low';
+}
+function demandScore(p) {
+  var stars  = parseFloat(p.stars)  || 0;
+  var bought = parseInt(p.boughtInLastMonth) || 0;
+  /* simplified inline score matching loader.py formula */
+  return Math.round((stars / 5) * 30 + Math.min(bought / 1000, 1) * 40 + 10);
+}
+
+var demandChartInst, priceChartInst;
+
+function renderCharts(products) {
+  var high=0, med=0, low=0;
+  products.forEach(function(p) {
+    var s = demandScore(p);
+    if (s>=60) high++; else if (s>=35) med++; else low++;
+  });
+
+  if (demandChartInst) demandChartInst.destroy();
+  demandChartInst = new Chart(g('demandChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['High','Medium','Low'],
+      datasets: [{ data:[high,med,low], backgroundColor:['#16a34a','#2563eb','#9ca3af'] }]
+    },
+    options: { maintainAspectRatio:false, plugins:{ legend:{ position:'bottom' } } }
+  });
+
+  if (priceChartInst) priceChartInst.destroy();
+  priceChartInst = new Chart(g('priceChart'), {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'Products',
+        data: products.map(function(p) {
+          return { x: parseFloat(p.price)||0, y: demandScore(p), title: p.title };
+        }),
+        backgroundColor: '#6366f199',
+        pointRadius: 6
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display:false },
+        tooltip: { callbacks: { label: function(c) { return c.raw.title + ' | Score:' + c.raw.y; } } }
+      },
+      scales: {
+        x: { title:{ display:true, text:'Price (Rs)' } },
+        y: { title:{ display:true, text:'Demand Score' } }
+      }
+    }
+  });
+}
+
+function deleteProduct(id) {
+  if (!confirm('Delete this product?')) return;
+  fetch('/api/user/products/' + id + '?email=' + encodeURIComponent(user.email), { method:'DELETE' })
+  .then(function(r) { return r.json(); })
+  .then(function() { loadProducts(); })
+  .catch(function() { alert('Delete failed.'); });
+}
+
+function loadProducts() {
+  if (!user.email) return;
+  fetch('/api/user/products?email=' + encodeURIComponent(user.email))
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    var list = d.data || [];
+
+    /* stats */
+    g('stCount').textContent = list.length;
+    var highCount = 0, totalScore = 0, totalPrice = 0;
+    list.forEach(function(p) {
+      var s = demandScore(p);
+      totalScore += s;
+      totalPrice += parseFloat(p.price) || 0;
+      if (s >= 60) highCount++;
+    });
+    g('stHigh').textContent    = highCount;
+    g('stAvgScore').textContent = list.length ? Math.round(totalScore/list.length) : 0;
+    g('stAvgPrice').textContent = list.length ? 'Rs' + Math.floor(totalPrice/list.length).toLocaleString() : 0;
+
+    if (!list.length) {
+      g('productsGrid').innerHTML =
+        '<div class="col-12 text-center py-5">' +
+        '<i class="bi bi-box-seam" style="font-size:2.5rem;color:#d1d5db;"></i>' +
+        '<p class="mt-3 text-white-50">No products yet.</p>' +
+        '<a href="/add_product.html" class="btn btn-primary mt-2">Add Your First Product</a>' +
+        '</div>';
+      return;
+    }
+
+    /* charts */
+    g('chartsRow').style.display = '';
+    renderCharts(list);
+
+    /* product cards */
+    g('productsGrid').innerHTML = list.map(function(p) {
+      var score = demandScore(p);
+      var level = demandLevel(score);
+      var dpCls = level==='High' ? 'dp-high' : level==='Medium' ? 'dp-medium' : 'dp-low';
+      var imgSrc = p.asin
+        ? '/api/images/' + p.asin + '.jpg'
+        : '/static/assets/placeholder_product.png';
+      var stars = '';
+      var s = Math.round(parseFloat(p.stars)||0);
+      for (var i=0;i<5;i++) stars += (i<s)?'&#9733;':'&#9734;';
+      return '<div class="col-sm-6 col-md-4">' +
+        '<div class="card h-100 border-0 shadow-sm">' +
+        '<img src="' + imgSrc + '" class="prod-img" alt="' + p.title + '" onerror="this.src=\'/static/assets/placeholder_product.png\'">' +
+        '<div class="card-body">' +
+        '<div class="d-flex justify-content-between align-items-start mb-1">' +
+        '<div class="fw-700" style="font-size:.9rem;line-height:1.3;">' + p.title + '</div>' +
+        '<button class="del-btn" onclick="deleteProduct(' + p.id + ')"><i class="bi bi-trash"></i></button>' +
+        '</div>' +
+        '<div class="text-white-50" style="font-size:.72rem;">' + (p.categoryName||'') + '</div>' +
+        '<div class="d-flex align-items-center gap-2 mt-2">' +
+        '<span class="fw-800" style="color: #ffffff;">&#8377;' + Math.floor(parseFloat(p.price)||0).toLocaleString() + '</span>' +
+        '<span style="color:#f59e0b;font-size:.8rem;">' + stars + '</span>' +
+        '</div>' +
+        '<div class="d-flex align-items-center gap-2 mt-2">' +
+        '<span class="demand-pill ' + dpCls + '">' + level + '</span>' +
+        '<span style="font-size:.72rem;color: #ffffff;">Score: ' + score + '</span>' +
+        '</div>' +
+        '<div style="font-size:.72rem;color:#9ca3af;margin-top:4px;">Added: ' + (p.added_on||'') + '</div>' +
+        '</div></div></div>';
+    }).join('');
+  })
+  .catch(function() {
+    g('productsGrid').innerHTML = '<div class="col-12 text-center text-white-50 py-4">Could not load products.</div>';
+  });
+}
+
+loadProducts();
+</script>
+</body>
+</html>

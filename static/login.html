@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In - ZYNAPSE</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css?v=4">
+<link rel="stylesheet" href="/static/style-oracle.css?v=4">
+  <link rel="stylesheet" href="/static/style-dark-theme.css?v=5">
+<style>
+.tab-btn { flex:1; padding:10px; font-weight:700; font-size:.9rem; border:none; background:none; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; color: #ffffff; transition:all .2s; }
+.tab-btn.active { color: #ffffff; border-bottom-color: #ffffff; }
+.panel { display:none; }
+.panel.active { display:block; }
+.msg-err { display:none; background:#fef2f2; color: #ffffff; border:1px solid #fecaca; border-radius:8px; padding:10px 14px; font-size:.85rem; margin-bottom:14px; }
+.msg-ok  { display:none; background:#f0fdf4; color: #ffffff; border:1px solid #bbf7d0; border-radius:8px; padding:10px 14px; font-size:.85rem; margin-bottom:14px; }
+.reg-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.reg-grid .full { grid-column:1/-1; }
+.form-input-qc { width:100%; }
+
+/* Dark Theme Overrides for Login */
+.login-bg {
+  background: linear-gradient(135deg, #020617 0%, #0f172a 100%) !important;
+}
+.bg-blur { display: none !important; }
+.bg-overlay { display: none !important; }
+
+.login-card {
+  background: rgba(255, 255, 255, 0.04) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%;
+}
+.login-brand { color: #fff !important; }
+.login-subtitle { color: rgba(255,255,255,0.6) !important; }
+.form-label-qc { color: rgba(255,255,255,0.8) !important; }
+.form-input-qc { 
+  background: rgba(255,255,255,0.05) !important; 
+  border: 1px solid rgba(255,255,255,0.1) !important; 
+  color: #fff !important; 
+}
+.form-input-qc:focus { border-color: #6366f1 !important; }
+.btn-signin {
+  background: #fff !important;
+  color: #000 !important;
+  border: none !important;
+}
+.sso-btn {
+  background: rgba(255,255,255,0.05) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  color: #fff !important;
+}
+.divider { color: rgba(255,255,255,0.4) !important; }
+.divider::before, .divider::after { border-top: 1px solid rgba(255,255,255,0.1) !important; }
+</style>
+</head>
+<body>
+<div class="login-bg">
+  <div class="bg-blur"></div>
+  <div class="bg-overlay"></div>
+  <div class="login-card" style="max-width:460px;">
+
+    <div class="login-brand">ZYNAPSE</div>
+    <p class="login-subtitle">AI-Powered Demand Intelligence Platform</p>
+
+    <div style="display:flex; border-bottom:2px solid #e5e7eb; margin-bottom:20px;">
+      <button class="tab-btn active" id="t0" onclick="switchTab(0)">Sign In</button>
+      <button class="tab-btn" id="t1" onclick="switchTab(1)">Register</button>
+    </div>
+
+    <div class="msg-err" id="errBox"></div>
+    <div class="msg-ok"  id="okBox"></div>
+
+    <!-- SIGN IN -->
+    <div class="panel active" id="p0">
+      <div class="mb-3">
+        <label class="form-label-qc">EMAIL ADDRESS</label>
+        <input type="email" id="lEmail" class="form-input-qc" placeholder="name@company.com">
+      </div>
+      <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <label class="form-label-qc mb-0">PASSWORD</label>
+          <a href="#" id="forgotLink" class="forgot-link">Forgot?</a>
+        </div>
+        <input type="password" id="lPass" class="form-input-qc mt-1" placeholder="Enter password">
+      </div>
+      <button class="btn-signin" id="loginBtn">
+        <i class="bi bi-box-arrow-in-right me-1"></i>Sign In
+      </button>
+      <div class="divider">OR</div>
+      <div class="social-btns">
+        <button class="sso-btn" id="demoBtn"><i class="bi bi-lightning-charge"></i> Demo Login</button>
+        <button class="sso-btn" onclick="switchTab(1)"><i class="bi bi-person-plus"></i> Register</button>
+      </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="panel" id="p1">
+      <div class="reg-grid">
+        <div class="full">
+          <label class="form-label-qc">FULL NAME *</label>
+          <input type="text" id="rName" class="form-input-qc" placeholder="Your full name">
+        </div>
+        <div class="full">
+          <label class="form-label-qc">EMAIL *</label>
+          <input type="email" id="rEmail" class="form-input-qc" placeholder="name@company.com">
+        </div>
+        <div>
+          <label class="form-label-qc">PASSWORD *</label>
+          <input type="password" id="rPass" class="form-input-qc" placeholder="8+ chars, upper, special">
+        </div>
+        <div>
+          <label class="form-label-qc">CONFIRM *</label>
+          <input type="password" id="rPass2" class="form-input-qc" placeholder="Repeat">
+        </div>
+        <div>
+          <label class="form-label-qc">PHONE *</label>
+          <input type="tel" id="rPhone" class="form-input-qc" placeholder="10 digit number" maxlength="10">
+        </div>
+        <div>
+          <label class="form-label-qc">CITY</label>
+          <select id="rCity" class="form-input-qc">
+            <option value="">Select</option>
+            <option>Mumbai</option><option>Delhi</option><option>Bangalore</option>
+            <option>Chennai</option><option>Hyderabad</option><option>Pune</option>
+            <option>Kolkata</option><option>Ahmedabad</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label-qc">DEPARTMENT</label>
+          <input type="text" id="rDept" class="form-input-qc" placeholder="e.g. Analytics">
+        </div>
+        <div>
+          <label class="form-label-qc">ROLE</label>
+          <select id="rRole" class="form-input-qc">
+            <option value="Analyst">Analyst</option>
+            <option value="Manager">Manager</option>
+            <option value="Viewer">Viewer</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-signin mt-3" id="regBtn">
+        <i class="bi bi-person-check me-1"></i>Create Account
+      </button>
+      <div class="register-link mt-2">
+        Already have an account? <a href="#" onclick="switchTab(0)">Sign In</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function switchTab(n) {
+  [0,1].forEach(function(i) {
+    document.getElementById('t'+i).classList.toggle('active', i===n);
+    document.getElementById('p'+i).classList.toggle('active', i===n);
+  });
+  document.getElementById('errBox').style.display = 'none';
+  document.getElementById('okBox').style.display  = 'none';
+}
+
+function showErr(m) { var e=document.getElementById('errBox'); e.textContent=m; e.style.display='block'; }
+function showOk(m)  { var e=document.getElementById('okBox');  e.textContent=m; e.style.display='block'; }
+
+/* Sign In */
+document.getElementById('loginBtn').addEventListener('click', function() {
+  var email = document.getElementById('lEmail').value.trim();
+  var pass  = document.getElementById('lPass').value.trim();
+  if (!email) { showErr('Enter your email.'); return; }
+  if (!pass)  { showErr('Enter your password.'); return; }
+  var btn = this;
+  btn.textContent = 'Signing in...'; btn.disabled = true;
+  fetch('/api/auth/login', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({email: email, password: pass})
+  })
+  .then(function(r) { return r.json().then(function(d) { return {ok:r.ok, d:d}; }); })
+  .then(function(res) {
+    if (!res.ok) { showErr(res.d.detail || 'Login failed.'); return; }
+    localStorage.setItem('qc_user', JSON.stringify(res.d.user));
+    window.location.href = '/index.html';
+  })
+  .catch(function() { showErr('Server error. Is the server running?'); })
+  .finally(function() { btn.textContent = 'Sign In'; btn.disabled = false; });
+});
+
+document.getElementById('lPass').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('loginBtn').click();
+});
+
+document.getElementById('forgotLink').addEventListener('click', function(e) {
+  e.preventDefault();
+  var em = document.getElementById('lEmail').value.trim();
+  alert(em ? 'Reset link sent to ' + em : 'Enter your email first.');
+});
+
+document.getElementById('demoBtn').addEventListener('click', function() {
+  document.getElementById('lEmail').value = 'user@quantcommerce.com';
+  document.getElementById('lPass').value  = 'password123';
+  document.getElementById('loginBtn').click();
+});
+
+/* Register */
+document.getElementById('regBtn').addEventListener('click', function() {
+  var name  = document.getElementById('rName').value.trim();
+  var email = document.getElementById('rEmail').value.trim();
+  var pass  = document.getElementById('rPass').value.trim();
+  var pass2 = document.getElementById('rPass2').value.trim();
+  var phone = document.getElementById('rPhone').value.trim();
+  if (!name)         { showErr('Name required.'); return; }
+  if (!email)        { showErr('Email required.'); return; }
+  if (!/^\d{10}$/.test(phone)) { showErr('Phone number must be exactly 10 digits.'); return; }
+  
+  if (pass.length < 8) { showErr('Password must be at least 8 characters.'); return; }
+  if (!/[A-Z]/.test(pass)) { showErr('Password needs an uppercase letter.'); return; }
+  if (!/[a-z]/.test(pass)) { showErr('Password needs a lowercase letter.'); return; }
+  if (!/[0-9]/.test(pass)) { showErr('Password needs a number.'); return; }
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(pass)) { showErr('Password needs a special character.'); return; }
+  if (pass !== pass2){ showErr('Passwords do not match.'); return; }
+  var btn = this;
+  btn.textContent = 'Creating...'; btn.disabled = true;
+  fetch('/api/auth/register', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      email:      email,
+      password:   pass,
+      name:       name,
+      phone:      document.getElementById('rPhone').value.trim(),
+      city:       document.getElementById('rCity').value,
+      department: document.getElementById('rDept').value.trim(),
+      role:       document.getElementById('rRole').value
+    })
+  })
+  .then(function(r) { return r.json().then(function(d) { return {ok:r.ok, d:d}; }); })
+  .then(function(res) {
+    if (!res.ok) { showErr(res.d.detail || 'Registration failed.'); return; }
+    localStorage.setItem('qc_user', JSON.stringify(res.d.user));
+    showOk('Account created! Redirecting...');
+    setTimeout(function() { window.location.href = '/index.html'; }, 1200);
+  })
+  .catch(function() { showErr('Server error.'); })
+  .finally(function() { btn.textContent = 'Create Account'; btn.disabled = false; });
+});
+</script>
+</body>
+</html>

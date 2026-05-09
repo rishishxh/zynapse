@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ZYNAPSE — Admin Dashboard for Order Fulfillment & Predictions.">
+  <title>Admin Dashboard — ZYNAPSE</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css?v=4">
+  <link rel="stylesheet" href="/static/style-oracle.css?v=4">
+  <link rel="stylesheet" href="/static/style-dark-theme.css?v=5">
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon"><i class="bi bi-boxes"></i></div>
+        <div>
+          <h6>Predictive Quant</h6>
+          <small>DEMAND INTELLIGENCE</small>
+        </div>
+      </div>
+      <ul class="admin-nav">
+        <li><a href="/index.html"><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
+        <li><a href="/demand_trends.html"><i class="bi bi-bar-chart-line"></i> Analytics</a></li>
+        <li><a href="/inventory.html" class="active"><i class="bi bi-box-seam"></i> Inventory</a></li>
+        <li><a href="/predictions.html"><i class="bi bi-diagram-3"></i> Predictions</a></li>
+        <li><a href="/profile.html"><i class="bi bi-gear"></i> Settings</a></li>
+      </ul>
+      <div class="sidebar-footer">
+        <button class="btn-report" onclick="alert('Report generation — coming soon!')"><i class="bi bi-file-earmark-bar-graph"></i> GENERATE REPORT</button>
+        <a href="/profile.html" class="support-link"><i class="bi bi-headset"></i> SUPPORT</a>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="admin-main">
+      <nav class="qc-navbar">
+        <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center">
+            <button class="hamburger sidebar-toggle me-3"><i class="bi bi-list"></i></button>
+            <a href="/index.html" class="navbar-brand logo-text"><strong>ZYNAPSE</strong></a>
+            <ul class="qc-nav-links d-flex gap-3 mb-0">
+              <li><a href="/marketplace.html">Marketplace</a></li>
+              <li><a href="/demand_trends.html">Demand Trends</a></li>
+              <li><a href="/predictions.html">Predictions</a></li>
+              <li><a href="/inventory.html">Inventory</a></li>
+            </ul>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="qc-search"><i class="bi bi-search search-icon"></i><input type="text" id="admin-search" placeholder="Search orders..."></div>
+            <div class="nav-icons d-flex align-items-center gap-3">
+              <a href="/checkout.html" class="icon-btn" style="color:#ffffff;font-size:1.3rem;position:relative;"><i class="bi bi-cart3"></i><span id="navCartCount" style="position:absolute; top:-5px; right:-10px; background:#ef4444; color:white; font-size:0.65rem; padding:2px 5px; border-radius:10px; font-weight:bold; display:none;">0</span></a>
+              <div style="position:relative;" id="profileDropdown">
+                <img id="navAvatar" src="https://ui-avatars.com/api/?name=A&background=dc2626&color=fff&rounded=true" class="nav-avatar" style="cursor:pointer;">
+                <div id="profileMenu" class="profile-menu">
+                  <div class="profile-menu-header"><div class="pm-name" id="pmName">User</div><div class="pm-email" id="pmEmail">--</div></div>
+                  <a href="/profile.html" class="profile-menu-item"><i class="bi bi-person-circle"></i> My Profile</a>
+                  <a href="/my_products.html" class="profile-menu-item"><i class="bi bi-box-seam"></i> My Products</a>
+                  <a href="/add_product.html" class="profile-menu-item"><i class="bi bi-plus-circle"></i> Add Product</a>
+                  <a href="/predictions.html" class="profile-menu-item"><i class="bi bi-cpu"></i> AI Predictions</a>
+                  <div class="profile-menu-divider"></div>
+                  <a href="#" class="profile-menu-item danger" id="navSignOut"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div class="admin-content">
+        <div class="admin-header">
+          <div>
+            <h2>Order Fulfillment &amp; Predictions</h2>
+            <p>Monitor historical transaction data and automated replenishment status.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn-export" onclick="alert('Exporting CSV...')"><i class="bi bi-download"></i> Export CSV</button>
+            <button class="btn-create-order" onclick="window.location.href='/checkout.html'"><i class="bi bi-plus-lg"></i> Create Manual Order</button>
+          </div>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="stat-cards">
+          <div class="stat-card">
+            <div class="stat-label">TOTAL ORDERS</div>
+            <div class="stat-value">1,284 <span class="stat-badge" style="background:#d1fae5;color:#059669">+12%</span></div>
+          </div>
+          <div class="demand-insight-card">
+            <h6>DEMAND INSIGHTS</h6>
+            <div class="insight-text">Surge<br>detected in<br>Category</div>
+          </div>
+        </div>
+
+        <!-- Orders Table -->
+        <table class="order-table">
+          <thead>
+            <tr>
+              <th>ORDER ID</th>
+              <th>DATE</th>
+              <th>ITEMS</th>
+              <th>TOTAL</th>
+              <th>STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="order-id">#QRC-00124</td>
+              <td class="order-date">MAR 15, 2024</td>
+              <td>6 Products</td>
+              <td>$4,284.00</td>
+              <td><span class="status-badge delivered">Delivered</span></td>
+            </tr>
+            <tr>
+              <td class="order-id">#QRC-00123</td>
+              <td class="order-date">MAR 14, 2024</td>
+              <td>3 Products</td>
+              <td>$2,450.00</td>
+              <td><span class="status-badge processing">Processing</span></td>
+            </tr>
+            <tr>
+              <td class="order-id">#QRC-00122</td>
+              <td class="order-date">MAR 13, 2024</td>
+              <td>2 Products</td>
+              <td>$899.00</td>
+              <td><span class="status-badge shipped">Shipped</span></td>
+            </tr>
+            <tr>
+              <td class="order-id">#QRC-00121</td>
+              <td class="order-date">MAR 12, 2024</td>
+              <td>1 Product</td>
+              <td>$1,199.00</td>
+              <td><span class="status-badge on-hold">On Hold</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="d-flex justify-content-between align-items-center mt-3" style="font-size:.85rem;color:var(--gray-500);">
+          <span>Showing 4 of 1,284 results</span>
+          <div class="section-arrows">
+            <button><i class="bi bi-chevron-left"></i></button>
+            <button><i class="bi bi-chevron-right"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="qc-footer" style="margin-top:2rem;">
+        <div class="container-fluid px-4">
+          <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+              <h6>ZYNAPSE</h6>
+              <p>Advanced prediction engine for modern enterprise supply chains.</p>
+            </div>
+            <div class="col-lg-3 col-md-6">
+              <h6>RESOURCES</h6>
+              <ul><li><a href="/marketplace.html">Categories</a></li><li><a href="/demand_trends.html">Demand Insights</a></li></ul>
+            </div>
+            <div class="col-lg-3 col-md-6">
+              <h6>SUPPORT</h6>
+              <ul><li><a href="/profile.html">Customer Service</a></li><li><a href="/login.html">Privacy Policy</a></li></ul>
+            </div>
+            <div class="col-lg-3 col-md-6">
+              <h6>NEWSLETTER</h6>
+              <div class="newsletter-input"><input type="email" placeholder="Email"><button><i class="bi bi-arrow-right"></i></button></div>
+            </div>
+          </div>
+          <div class="footer-bottom">&copy; 2024 ZYNAPSE. Precision-First Intelligence.</div>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+  // search
+  var s = document.getElementById('admin-search');
+  if (s) s.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && this.value.trim())
+      window.location.href = '/marketplace.html?search=' + encodeURIComponent(this.value.trim());
+  });
+
+  // load live stats
+  fetch('/api/stats').then(function(r){return r.json();}).then(function(d){
+    var el = document.querySelector('.stat-value');
+    if (el) el.innerHTML = d.total_products.toLocaleString() +
+      ' <span class="stat-badge" style="background:#d1fae5;color:#059669">Live</span>';
+  }).catch(function(){});
+  </script>
+<script src="/static/nav_user.js"></script>
+</body>
+</html>
