@@ -1,5 +1,5 @@
 """
-Main Application — QUANT COMMERCE
+Main Application — ZYNAPSE
 FastAPI server — static files + API
 """
 
@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
 
 # ================= APP INIT =================
 app = FastAPI(
-    title="QUANT COMMERCE",
+    title="ZYNAPSE",
     version="2.0.0",
     lifespan=lifespan
 )

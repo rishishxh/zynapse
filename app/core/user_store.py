@@ -1,5 +1,5 @@
 """
-User Store — QUANT COMMERCE
+User Store — ZYNAPSE
 CSV-backed user accounts and user-added products.
 Files: data/users.csv, data/user_products.csv
 """

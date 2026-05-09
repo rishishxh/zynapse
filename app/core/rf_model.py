@@ -1,5 +1,5 @@
 """
-Deep Learning Model -- QUANT COMMERCE
+Deep Learning Model -- ZYNAPSE
 Multi-Layer Perceptron Neural Network to predict demand level.
 
 Architecture : Input(5) -> Dense(128,ReLU) -> Dense(64,ReLU) -> Dense(32,ReLU) -> Output(3,Softmax)

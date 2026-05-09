@@ -15,7 +15,7 @@ def fail(msg):
     FAIL.append(msg)
     print("  FAIL:", msg)
 
-print("\n=== QUANT COMMERCE Backend Test ===\n")
+print("\n=== ZYNAPSE Backend Test ===\n")
 
 # 1. Loader
 print("[1] Data Loader")

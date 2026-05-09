@@ -1,4 +1,4 @@
-/* main.js v4 - QUANT COMMERCE */
+/* main.js v4 - ZYNAPSE */
 
 var API_URL  = "/api/products";
 var PRED_API = "/api/predictions";

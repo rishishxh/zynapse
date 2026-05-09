@@ -1,5 +1,5 @@
 """
-Data Loader — QUANT COMMERCE
+Data Loader — ZYNAPSE
 Single-load CSV with dtype optimisation and pre-computed demand_score.
 Compatible with Python 3.7+
 """

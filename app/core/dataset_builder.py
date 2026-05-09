@@ -1,5 +1,5 @@
 """
-Dataset Builder -- QUANT COMMERCE
+Dataset Builder -- ZYNAPSE
 Generates data/products_with_demand.csv:
   - All dataset products + user-added products
   - Equal-weight demand_score (25% each factor)

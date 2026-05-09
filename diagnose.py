@@ -10,7 +10,7 @@ def log(msg):
     out.append(msg)
     print(msg)
 
-log("=== QUANT COMMERCE IMAGE DIAGNOSIS ===\n")
+log("=== ZYNAPSE IMAGE DIAGNOSIS ===\n")
 
 # 1. Check CSV
 try:

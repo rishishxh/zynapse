@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (so) {
     so.addEventListener('click', function (e) {
       e.preventDefault();
-      if (confirm('Sign out of QUANT COMMERCE?')) {
+      if (confirm('Sign out of ZYNAPSE?')) {
         localStorage.clear();
         window.location.replace('/login.html');
       }

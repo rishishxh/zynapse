@@ -1,5 +1,5 @@
 """
-API Routes — QUANT COMMERCE (MongoDB-backed)
+API Routes — ZYNAPSE (MongoDB-backed)
 Compatible with Python 3.7+
 
 Endpoints:

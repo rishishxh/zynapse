@@ -1,6 +1,6 @@
 email,password_hash,name,phone,department,city,role,joined
-admin@quantcommerce.com,8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918,Admin User,+91 98765 00000,Administration,Mumbai,Admin,2024-01-01
-user@quantcommerce.com,04f8996da763b7a969b1028ee3007569eaf3a635486ddab211d512c85b9df8fb,Quant User,+91 98765 43210,Analytics & Intelligence,Mumbai,Analyst,2024-01-15
+admin@zynapse.com,8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918,Admin User,+91 98765 00000,Administration,Mumbai,Admin,2024-01-01
+user@zynapse.com,04f8996da763b7a969b1028ee3007569eaf3a635486ddab211d512c85b9df8fb,Quant User,+91 98765 43210,Analytics & Intelligence,Mumbai,Analyst,2024-01-15
 yesha8@gmail.com,93a55db6bf6de59397ef4848f60b5f48c0814282cc6b71d25050ede2025c9d05,Yesha Solanki,+919429534097,Sales,Ahmedabad,Viewer,2026-04-24
 rishishah@gmail.com,6c3f97e55cac530215d0c0e77ed4ff5c8c69de1e4219c87d313fe29785785be3,rishishah,1234567890,fashion,Ahmedabad,Analyst,2026-04-29
 rishishah1@gmail.com,cd3bce04b09ebff8e6f0ecc6d987161a293142b80da84e843b71e835fb9317a4,Rishi shah,12345678,fashion,Ahmedabad,Analyst,2026-05-09
