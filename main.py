@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.mongo_loader import load_data, get_df
 from app.core.database import ping as mongo_ping, ensure_indexes
 from app.api.routes import router as api_router
+from app.api.analytics import router as analytics_router
 import os, shutil, uuid
 
 # ================= BASE PATH =================
@@ -52,8 +53,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Don't let browsers cache HTML pages — otherwise frontend code changes are
+# hidden behind stale cached copies until the user does a hard refresh.
+@app.middleware("http")
+async def _no_cache_html(request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    if path == "/" or path.endswith(".html"):
+        response.headers["Cache-Control"] = "no-store, must-revalidate"
+    return response
+
 # ================= API ROUTES =================
 app.include_router(api_router)
+app.include_router(analytics_router)
 
 # ================= STATIC FILES (ONLY ONE HANDLER) =================
 app.mount(
@@ -111,6 +123,10 @@ async def predict_page():
 async def category_analysis_page():
     return FileResponse(os.path.join(STATIC_DIR, "category_analysis.html"))
 
+@app.get("/analytics.html")
+async def analytics_page():
+    return FileResponse(os.path.join(STATIC_DIR, "analytics.html"))
+
 @app.get("/add_product.html")
 async def add_product_page():
     return FileResponse(os.path.join(STATIC_DIR, "add_product.html"))
@@ -141,28 +157,39 @@ async def upload_product_image(
         f.write(file_bytes)
 
     # update MongoDB — find the asin for this product_id
-    from app.core.database import user_products_col
+    from app.core.database import user_products_col, get_gridfs, get_db
     up_doc = user_products_col().find_one({"id": int(product_id), "owner_email": email.lower()})
     asin_val = None
     if up_doc:
         asin_val = up_doc.get("asin")
+        from datetime import datetime as _dt
         user_products_col().update_one(
             {"id": int(product_id), "owner_email": email.lower()},
-            {"$set": {"image_filename": filename}}
+            {"$set": {
+                "image_filename": filename,
+                "updated_on":     _dt.now().strftime("%Y-%m-%d %H:%M"),
+            }}
         )
 
-    # also save to static/images/{asin}.jpg so marketplace loads it natively
+    # write the new image to GridFS (the serve route at /api/images/{asin} reads from here).
+    # delete any stale GridFS entries with the same filename first — old seed data has
+    # entries that collide with newly-issued asins and would otherwise be served instead.
+    content_type = {
+        ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+        ".png": "image/png",  ".webp": "image/webp",
+    }.get(ext, "application/octet-stream")
     if asin_val:
-        img_name = str(asin_val) + ".jpg"
-        dest_img = os.path.join(STATIC_DIR, "images", img_name)
-        with open(dest_img, "wb") as f:
-            f.write(file_bytes)
+        gridfs_name = str(asin_val) + ".jpg"   # serve route looks up `{asin}.jpg`
+        db = get_db()
+        for old in db["fs.files"].find({"filename": gridfs_name}, {"_id": 1}):
+            get_gridfs().delete(old["_id"])
+        get_gridfs().put(file_bytes, filename=gridfs_name, contentType=content_type)
 
     return {
         "success":  True,
         "filename": filename,
         "url":      "/static/user_images/" + filename,
-        "asin_img": "/static/images/" + str(asin_val) + ".jpg" if asin_val else None,
+        "asin_img": ("/api/images/" + str(asin_val) + ".jpg") if asin_val else None,
     }
 
 # ── serve user uploaded images ──

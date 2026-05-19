@@ -29,10 +29,19 @@ document.addEventListener('DOMContentLoaded', function () {
   if (so) {
     so.addEventListener('click', function (e) {
       e.preventDefault();
-      if (confirm('Sign out of ZYNAPSE?')) {
-        localStorage.clear();
-        window.location.replace('/login.html');
-      }
+      zynConfirm({
+        icon: 'danger',
+        title: 'Sign Out',
+        message: 'Are you sure you want to sign out of ZYNAPSE?',
+        confirmText: 'Yes, Sign Out',
+        cancelText: 'Cancel',
+        btnStyle: 'confirm-danger'
+      }).then(function (yes) {
+        if (yes) {
+          localStorage.clear();
+          window.location.replace('/login.html');
+        }
+      });
     });
   }
 

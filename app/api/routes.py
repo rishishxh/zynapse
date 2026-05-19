@@ -211,13 +211,16 @@ async def demand_prediction(asin: int):
                 bmax = float(_df["boughtInLastMonth"].max())
                 pmin = float(_df["price"].min())
                 pmax = float(_df["price"].max())
-                sn = ((stars - 1.0) / 4.0) * 100.0
-                bn = (bought / bmax) * 100.0 if bmax else 0.0
+                # clamp each normalized component to [0, 100] so user products
+                # priced/sold outside the seed dataset range don't blow up the score.
+                clip = lambda x: max(0.0, min(100.0, x))
+                sn  = clip(((stars - 1.0) / 4.0) * 100.0)
+                bn  = clip((bought / bmax) * 100.0) if bmax else 0.0
                 bsn = 100.0 if bs else 0.0
-                prn = (1.0 - (price - pmin) / (pmax - pmin)) * 100.0 if pmax > pmin else 50.0
-                score = round((sn + bn + bsn + prn) * 0.25, 2)
+                prn = clip((1.0 - (price - pmin) / (pmax - pmin)) * 100.0) if pmax > pmin else 50.0
+                score = round(clip((sn + bn + bsn + prn) * 0.25), 2)
                 level = "High" if score >= 60 else ("Medium" if score >= 35 else "Low")
-                conf  = round(min(95.0, (score / 100.0) * 95), 1)
+                conf  = round(max(0.0, min(95.0, (score / 100.0) * 95)), 1)
                 return {
                     "asin":              asin,
                     "title":             p.get("title", ""),
@@ -655,8 +658,8 @@ async def category_analysis(category: str = Query(...)):
 # ══════════════════════════════════════════════════════════════════════════════
 from app.core.mongo_user_store import (
     register_user, login_user, get_user, update_user, safe_user,
-    add_user_product, get_user_products, delete_user_product,
-    get_all_user_products
+    add_user_product, update_user_product, get_user_products,
+    delete_user_product, get_all_user_products
 )
 
 
@@ -686,6 +689,17 @@ class UpdateProfileBody(BaseModel):
 
 
 class AddProductBody(BaseModel):
+    owner_email:      str
+    title:            str
+    categoryName:     str
+    price:            float
+    stars:            float
+    boughtInLastMonth: int  = 0
+    isBestSeller:     bool  = False
+    description:      str   = ""
+
+
+class EditProductBody(BaseModel):
     owner_email:      str
     title:            str
     categoryName:     str
@@ -763,6 +777,29 @@ async def upload_product_image(
     return {"detail": "Use POST /upload-product-image instead"}
 
 
+@router.put("/user/products/{product_id}")
+async def api_edit_product(product_id: int, body: EditProductBody):
+    if not body.owner_email:
+        raise HTTPException(status_code=422, detail="owner_email required")
+    if not body.title or not body.categoryName or body.price <= 0:
+        raise HTTPException(status_code=422, detail="title, category and price > 0 required")
+    if not (1.0 <= body.stars <= 5.0):
+        raise HTTPException(status_code=422, detail="stars must be 1-5")
+    updates = {
+        "title":             body.title,
+        "categoryName":      body.categoryName,
+        "price":             body.price,
+        "stars":             body.stars,
+        "boughtInLastMonth": body.boughtInLastMonth,
+        "isBestSeller":      body.isBestSeller,
+        "description":       body.description,
+    }
+    doc, err = update_user_product(body.owner_email, product_id, updates)
+    if err:
+        raise HTTPException(status_code=404, detail=err)
+    return {"success": True, "product": doc}
+
+
 @router.delete("/user/products/{product_id}")
 async def api_delete_product(product_id: int, email: str = Query(...)):
     ok = delete_user_product(email, product_id)
@@ -828,10 +865,11 @@ async def get_product_image(asin: str):
             raise HTTPException(status_code=404, detail="Image not found")
 
         image_data = grid_file.read()
+        media_type = getattr(grid_file, "content_type", None) or "image/jpeg"
         return StreamingResponse(
             io.BytesIO(image_data),
-            media_type="image/jpeg",
-            headers={"Cache-Control": "public, max-age=86400"}
+            media_type=media_type,
+            headers={"Cache-Control": "no-store, must-revalidate"}
         )
     except HTTPException:
         raise

@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics — ZYNAPSE</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css?v=6">
+<link rel="stylesheet" href="/static/style-oracle.css?v=6">
+<link rel="stylesheet" href="/static/style-dark-theme.css?v=6">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+
+<style>
+  body { font-family: Arial, system-ui, sans-serif; }
+
+  /* Full-bleed dashboard — fill the entire viewport edge to edge, only keeping
+     a small side padding so cards don't hug the screen border. */
+  .an-wrap {
+    width: 100%;
+    max-width: none;
+    margin: 0 auto;
+    padding-left: 32px;
+    padding-right: 32px;
+    box-sizing: border-box;
+  }
+  @media (max-width: 768px) {
+    .an-wrap { padding-left: 16px; padding-right: 16px; }
+  }
+
+  .an-hero {
+    background: rgba(255, 255, 255, 0.025);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 56px 0 36px;
+    color: #fff;
+  }
+  .an-hero h1 { font-size: 2.2rem; font-weight: 600; margin: 0 0 8px; }
+  .an-hero p  { color: rgba(255, 255, 255, 0.55); margin: 0; }
+
+  .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 28px; }
+  @media (max-width: 900px) { .kpi-strip { grid-template-columns: repeat(2, 1fr); } }
+
+  .kpi {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 18px 22px;
+    transition: transform .15s ease, border-color .2s ease;
+  }
+  .kpi:hover { transform: translateY(-2px); border-color: rgba(167, 139, 250, 0.35); }
+  .kpi .l { font-size: .7rem; letter-spacing: .8px; text-transform: uppercase; color: rgba(255,255,255,0.55); }
+  .kpi .v { font-size: 1.9rem; font-weight: 700; color: #fff; margin-top: 4px; line-height: 1.1; }
+  .kpi .s { font-size: .75rem; color: #a5b4fc; margin-top: 2px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 18px;
+    margin-top: 28px;
+  }
+  .card-an {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+    /* Make the card a column so chart-wrap can be a fixed slot and insights anchor to the bottom */
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+  .card-an h5 {
+    font-size: .95rem; font-weight: 600; color: #fff;
+    margin: 0 0 4px;
+    display: flex; align-items: center; gap: 8px;
+    min-height: 24px;
+  }
+  .card-an .sub {
+    font-size: .72rem; color: rgba(255,255,255,0.45); margin-bottom: 14px;
+    min-height: 32px;        /* keep every card's header block the same height */
+    display: flex; align-items: flex-start;
+  }
+  /* Chart wrap: explicit deterministic dimensions so every chart starts at the same y */
+  .card-an .chart-wrap {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    flex: 0 0 auto;           /* don't let flexbox shrink/grow it */
+    overflow: hidden;         /* clip any pixel overshoot from Plotly's internal SVG sizing */
+  }
+  .card-an .chart-wrap.tall { height: 400px; }
+  .card-an .chart-wrap > canvas { max-height: 100%; max-width: 100%; }
+  /* Plotly mounts directly INTO .chart-wrap (it adds .js-plotly-plot to that element).
+     Let Plotly compute its own pixel dimensions — don't force 100% on its inner SVGs. */
+
+  .col-12 { grid-column: span 12; }
+  .col-8  { grid-column: span 8; }
+  .col-7  { grid-column: span 7; }
+  .col-6  { grid-column: span 6; }
+  .col-5  { grid-column: span 5; }
+  .col-4  { grid-column: span 4; }
+  @media (max-width: 1024px) { .col-8, .col-7, .col-6, .col-5, .col-4 { grid-column: span 12; } }
+
+  .insights {
+    margin-top: auto;         /* anchor to bottom so cards align across rows */
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+  }
+  .insights ul { margin: 0; padding: 0; }
+  .insights li {
+    list-style: none;
+    font-size: .8rem;
+    color: rgba(255,255,255,0.78);
+    padding: 4px 0 4px 22px;
+    position: relative;
+  }
+  .insights li::before {
+    content: '';
+    position: absolute;
+    left: 4px; top: 11px;
+    width: 8px; height: 8px;
+    border-radius: 99px;
+    background: linear-gradient(135deg, #6366f1, #a78bfa);
+    box-shadow: 0 0 8px rgba(124,58,237,0.6);
+  }
+  .insights .head {
+    font-size: .68rem; letter-spacing: 1px; text-transform: uppercase;
+    color: rgba(255,255,255,0.45); margin-bottom: 4px; padding-left: 4px;
+  }
+
+  /* Skeleton overlays the chart area without occupying flex space */
+  .skeleton {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, rgba(255,255,255,0.04) 8%, rgba(255,255,255,0.08) 18%, rgba(255,255,255,0.04) 33%);
+    background-size: 200% 100%;
+    animation: shimmer 1.2s linear infinite;
+    border-radius: 10px;
+    z-index: 1;
+    pointer-events: none;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* plotly overrides for dark glass */
+  .js-plotly-plot .plotly .modebar { background: transparent !important; }
+  .js-plotly-plot .plotly .modebar-btn path { fill: rgba(255,255,255,0.6) !important; }
+</style>
+</head>
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<nav class="qc-navbar">
+  <div class="container d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-4">
+      <a href="/index.html" class="navbar-brand logo-text"><strong>ZYNAPSE</strong></a>
+      <ul class="qc-nav-links d-flex gap-3 mb-0">
+        <li><a href="/marketplace.html">Marketplace</a></li>
+        <li><a href="/demand_trends.html">Demand Trends</a></li>
+        <li><a href="/predictions.html">Predictions</a></li>
+        <li><a href="/inventory.html">Inventory</a></li>
+        <li><a href="/analytics.html" class="active">Analytics</a></li>
+      </ul>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <a href="/checkout.html" class="icon-btn" style="color:#ffffff;font-size:1.3rem;position:relative;">
+        <i class="bi bi-cart3"></i>
+        <span id="navCartCount" style="position:absolute; top:-5px; right:-10px; background:#ef4444; color:white; font-size:0.65rem; padding:2px 5px; border-radius:10px; font-weight:bold; display:none;">0</span>
+      </a>
+      <img id="navAvatar" src="https://ui-avatars.com/api/?name=U&background=6366f1&color=fff&rounded=true" class="nav-avatar">
+    </div>
+  </div>
+</nav>
+
+<!-- ================= HERO + KPI STRIP ================= -->
+<section class="an-hero">
+  <div class="an-wrap">
+    <div class="badge-pill mb-2"><i class="bi bi-graph-up"></i> BIG DATA ANALYTICS</div>
+    <h1>Analytics Dashboard</h1>
+    <p>Live aggregations across the ZYNAPSE catalog &mdash; powered by pandas + MongoDB.</p>
+
+    <div class="kpi-strip" id="kpiStrip">
+      <div class="kpi"><div class="l">Total Products</div><div class="v" id="kTotal">—</div><div class="s">across all categories</div></div>
+      <div class="kpi"><div class="l">Categories</div><div class="v" id="kCats">—</div><div class="s">distinct labels</div></div>
+      <div class="kpi"><div class="l">Best Sellers</div><div class="v" id="kBs">—</div><div class="s">isBestSeller = true</div></div>
+      <div class="kpi"><div class="l">High Demand</div><div class="v" id="kHigh">—</div><div class="s">demand_score ≥ 60</div></div>
+      <div class="kpi"><div class="l">Avg Price</div><div class="v" id="kPrice">—</div><div class="s">catalog mean</div></div>
+      <div class="kpi"><div class="l">Avg Rating</div><div class="v" id="kStars">—</div><div class="s">stars (1–5)</div></div>
+      <div class="kpi"><div class="l">Avg Demand Score</div><div class="v" id="kDemand">—</div><div class="s">0–100 scale</div></div>
+      <div class="kpi"><div class="l">Units / Month</div><div class="v" id="kUnits">—</div><div class="s">sum boughtInLastMonth</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CHARTS GRID ================= -->
+<div class="an-wrap py-4">
+  <div class="grid">
+
+    <!-- Bar: Category Distribution -->
+    <div class="card-an col-12">
+      <h5><i class="bi bi-bar-chart-fill"></i> Category Distribution</h5>
+      <div class="sub">Top 12 categories by product count &mdash; Chart.js bar</div>
+      <div class="chart-wrap"><canvas id="chartCategory"></canvas><div class="skeleton" id="skelCategory"></div></div>
+      <div class="insights"><div class="head">Insights</div><ul id="insCategory"></ul></div>
+    </div>
+
+    <!-- Pie: Demand Level -->
+    <div class="card-an col-12">
+      <h5><i class="bi bi-pie-chart-fill"></i> Demand Level Mix</h5>
+      <div class="sub">High / Medium / Low &mdash; Chart.js doughnut</div>
+      <div class="chart-wrap"><canvas id="chartDemandPie"></canvas><div class="skeleton" id="skelDemandPie"></div></div>
+      <div class="insights"><div class="head">Insights</div><ul id="insDemand"></ul></div>
+    </div>
+
+    <!-- Line: Monthly Trend (Plotly interactive) — full width -->
+    <div class="card-an col-12">
+      <h5><i class="bi bi-graph-up"></i> Monthly Sales Trend</h5>
+      <div class="sub">12-month seasonal curve from boughtInLastMonth &mdash; Plotly (zoom / hover)</div>
+      <div class="chart-wrap" id="chartTrend"><div class="skeleton" id="skelTrend"></div></div>
+      <div class="insights"><div class="head">Insights</div><ul id="insTrend"></ul></div>
+    </div>
+
+    <!-- Bubble: Demand Visualization (Chart.js) — full width so 15 bubbles aren't cramped -->
+    <div class="card-an col-12">
+      <h5><i class="bi bi-circle-fill"></i> Demand Bubble &mdash; Price &times; Demand &times; Volume</h5>
+      <div class="sub">15 top categories &mdash; bubble area is proportional to product count</div>
+      <div class="chart-wrap"><canvas id="chartBubble"></canvas><div class="skeleton" id="skelBubble"></div></div>
+      <div class="insights"><div class="head">Insights</div><ul id="insBubble"></ul></div>
+    </div>
+
+    <!-- Scatter: Price vs Rating (Plotly interactive) -->
+    <div class="card-an col-12">
+      <h5><i class="bi bi-broadcast"></i> Price &times; Rating</h5>
+      <div class="sub">Random sample of 1,200 products &mdash; Plotly (color = demand)</div>
+      <div class="chart-wrap" id="chartScatter"><div class="skeleton" id="skelScatter"></div></div>
+      <div class="insights"><div class="head">Insights</div><ul id="insScatter"></ul></div>
+    </div>
+
+    <!-- Heatmap: Correlation Matrix (Plotly) -->
+    <div class="card-an col-12">
+      <h5><i class="bi bi-grid-3x3-gap-fill"></i> Correlation Matrix</h5>
+      <div class="sub">Pearson correlation across price / rating / units / demand_score</div>
+      <div class="chart-wrap" id="chartHeatmap"><div class="skeleton" id="skelHeatmap"></div></div>
+      <div class="insights"><div class="head">Insights</div><ul id="insCorr"></ul></div>
+    </div>
+
+    <!-- Box Plot: Price by Category (Plotly) — full width, taller -->
+    <div class="card-an col-12">
+      <h5><i class="bi bi-box"></i> Price Distribution by Category</h5>
+      <div class="sub">Box plot (min / Q1 / median / Q3 / max) for top 10 categories &mdash; Plotly</div>
+      <div class="chart-wrap tall" id="chartBox"><div class="skeleton" id="skelBox"></div></div>
+      <div class="insights"><div class="head">Insights</div><ul id="insBox"></ul></div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="qc-footer text-center"><p>&copy; 2026 ZYNAPSE Systems &mdash; Big Data Analytics</p></footer>
+
+<script>
+/* ──────────────────────────────────────────────────────────────────────────
+   Shared helpers
+   ────────────────────────────────────────────────────────────────────────── */
+var palette = {
+  primary:   "#6366f1",
+  primary2:  "#a78bfa",
+  accent:    "#22d3ee",
+  warm:      "#f59e0b",
+  green:     "#10b981",
+  red:       "#ef4444",
+  text:      "#ffffff",
+  textDim:   "rgba(255,255,255,0.55)",
+  grid:      "rgba(255,255,255,0.08)",
+};
+var SERIES_COLORS = ["#6366f1","#a78bfa","#22d3ee","#10b981","#f59e0b","#ef4444","#ec4899","#34d399","#60a5fa","#f97316","#fbbf24","#8b5cf6"];
+
+function showInsights(id, items) {
+  var ul = document.getElementById(id);
+  if (!ul) return;
+  ul.innerHTML = (items || []).map(function(t){ return "<li>" + t + "</li>"; }).join("");
+}
+function hideSkeleton(id) {
+  var el = document.getElementById(id);
+  if (el) el.style.display = "none";
+}
+function fmt(n) {
+  if (n == null) return "—";
+  if (typeof n !== "number") return n;
+  return n.toLocaleString();
+}
+function inr(n) { return "₹" + Math.round(n).toLocaleString(); }
+
+/* Chart.js global defaults — dark theme */
+Chart.defaults.color = palette.textDim;
+Chart.defaults.borderColor = palette.grid;
+Chart.defaults.font.family = "Arial, system-ui, sans-serif";
+
+var plotlyLayoutBase = {
+  paper_bgcolor: "rgba(0,0,0,0)",
+  plot_bgcolor:  "rgba(0,0,0,0)",
+  font:    { color: "rgba(255,255,255,0.85)", family: "Arial, system-ui, sans-serif", size: 12 },
+  margin:  { l: 50, r: 20, t: 14, b: 50 },
+  hoverlabel: { bgcolor: "#0f172a", bordercolor: "rgba(167,139,250,0.5)", font: { color: "#fff" } },
+  xaxis: { gridcolor: palette.grid, zerolinecolor: palette.grid, linecolor: palette.grid, tickcolor: palette.grid },
+  yaxis: { gridcolor: palette.grid, zerolinecolor: palette.grid, linecolor: palette.grid, tickcolor: palette.grid },
+};
+var plotlyConfig = { displaylogo: false, responsive: true, modeBarButtonsToRemove: ["lasso2d","select2d"] };
+var plotlyMounts = [];
+
+function mountPlotly(elId, traces, layout, config) {
+  var el = document.getElementById(elId);
+  if (!el) { console.error("[analytics] missing mount target:", elId); return; }
+  // Use an explicit height so the chart renders even when clientHeight is 0
+  // during initial layout. Fall back to the container size, then a default.
+  var h = (layout && layout.height) || el.clientHeight || 400;
+  layout = Object.assign({ autosize: true }, layout || {}, { height: h });
+  try {
+    Plotly.newPlot(el, traces, layout, config || plotlyConfig).then(function() {
+      requestAnimationFrame(function() {
+        try { Plotly.Plots.resize(el); } catch (e) { /* noop */ }
+      });
+      // Second resize after layout has fully settled (some browsers need it).
+      setTimeout(function() { try { Plotly.Plots.resize(el); } catch (e) {} }, 250);
+    });
+    plotlyMounts.push(el);
+  } catch (err) {
+    console.error("[analytics] Plotly render failed for", elId, err);
+  }
+}
+
+// Keep all Plotly charts responsive on window resize.
+window.addEventListener("resize", function() {
+  plotlyMounts.forEach(function(el) { try { Plotly.Plots.resize(el); } catch (e) {} });
+});
+
+// Surface any uncaught errors in the chart pipelines instead of failing silently.
+window.addEventListener("error", function(e) {
+  console.error("[analytics] uncaught:", e.message, e.filename + ":" + e.lineno);
+});
+
+/* ──────────────────────────────────────────────────────────────────────────
+   1. SUMMARY KPIs
+   ────────────────────────────────────────────────────────────────────────── */
+fetch("/api/analytics/summary").then(function(r){ return r.json(); }).then(function(d){
+  document.getElementById("kTotal").textContent  = fmt(d.total_products);
+  document.getElementById("kCats").textContent   = fmt(d.total_categories);
+  document.getElementById("kBs").textContent     = fmt(d.best_sellers);
+  document.getElementById("kHigh").textContent   = fmt(d.high_demand_count);
+  document.getElementById("kPrice").textContent  = inr(d.avg_price);
+  document.getElementById("kStars").textContent  = d.avg_stars.toFixed(2);
+  document.getElementById("kDemand").textContent = d.avg_demand.toFixed(1);
+  document.getElementById("kUnits").textContent  = fmt(d.total_units_month);
+}).catch(function(e){ console.error("[summary] failed:", e); });
+
+/* ──────────────────────────────────────────────────────────────────────────
+   2. CATEGORY DISTRIBUTION — Chart.js bar
+   ────────────────────────────────────────────────────────────────────────── */
+fetch("/api/analytics/category-distribution?top=12").then(function(r){ return r.json(); }).then(function(d){
+  hideSkeleton("skelCategory");
+  new Chart(document.getElementById("chartCategory"), {
+    type: "bar",
+    data: {
+      labels: d.data.map(function(r){ return r.category; }),
+      datasets: [{
+        label: "Products",
+        data: d.data.map(function(r){ return r.count; }),
+        backgroundColor: d.data.map(function(_, i){ return SERIES_COLORS[i % SERIES_COLORS.length] + "cc"; }),
+        borderColor: d.data.map(function(_, i){ return SERIES_COLORS[i % SERIES_COLORS.length]; }),
+        borderWidth: 1,
+        borderRadius: 6,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: "#0f172a", borderColor: "rgba(167,139,250,0.5)", borderWidth: 1 } },
+      scales: {
+        x: { ticks: { autoSkip: false, maxRotation: 40, minRotation: 30 }, grid: { display: false } },
+        y: { beginAtZero: true, grid: { color: palette.grid } },
+      },
+    },
+  });
+  showInsights("insCategory", d.insights);
+});
+
+/* ──────────────────────────────────────────────────────────────────────────
+   3. DEMAND ANALYSIS — Chart.js doughnut (pie) + Chart.js bubble
+   ────────────────────────────────────────────────────────────────────────── */
+fetch("/api/analytics/demand-analysis").then(function(r){ return r.json(); }).then(function(d){
+  // Pie
+  hideSkeleton("skelDemandPie");
+  new Chart(document.getElementById("chartDemandPie"), {
+    type: "doughnut",
+    data: {
+      labels: d.pie.map(function(r){ return r.level + " (" + r.pct + "%)"; }),
+      datasets: [{
+        data: d.pie.map(function(r){ return r.count; }),
+        backgroundColor: [palette.green, palette.warm, palette.red],
+        borderColor: "rgba(0,0,0,0.6)",
+        borderWidth: 2,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: "62%",
+      plugins: {
+        legend: { position: "bottom", labels: { color: palette.text, padding: 14, font: { size: 11 } } },
+        tooltip: { backgroundColor: "#0f172a", borderColor: "rgba(167,139,250,0.5)", borderWidth: 1 },
+      },
+    },
+  });
+  showInsights("insDemand", d.insights);
+
+  // Bubble
+  hideSkeleton("skelBubble");
+  new Chart(document.getElementById("chartBubble"), {
+    type: "bubble",
+    data: {
+      datasets: d.bubble.map(function(r, i) {
+        return {
+          label: r.category,
+          data: [{ x: r.avg_price, y: r.avg_demand, r: Math.min(28, Math.max(5, Math.sqrt(r.count) * 0.7)) }],
+          backgroundColor: SERIES_COLORS[i % SERIES_COLORS.length] + "aa",
+          borderColor: SERIES_COLORS[i % SERIES_COLORS.length],
+          borderWidth: 1,
+        };
+      }),
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#0f172a", borderColor: "rgba(167,139,250,0.5)", borderWidth: 1,
+          callbacks: {
+            label: function(ctx) {
+              var bub = d.bubble[ctx.datasetIndex];
+              return [
+                bub.category,
+                "Avg price: ₹" + Math.round(bub.avg_price).toLocaleString(),
+                "Avg demand: " + bub.avg_demand.toFixed(1),
+                "Products: " + bub.count.toLocaleString(),
+              ];
+            },
+          },
+        },
+      },
+      scales: {
+        x: { title: { display: true, text: "Avg Price (₹)", color: palette.textDim }, grid: { color: palette.grid } },
+        y: { title: { display: true, text: "Avg Demand Score", color: palette.textDim }, grid: { color: palette.grid } },
+      },
+    },
+  });
+  showInsights("insBubble", [
+    "Bubble area is proportional to product count.",
+    "Upper-left bubbles = cheap and high-demand (best margin opportunity).",
+    "Lower-right bubbles = premium but soft demand &mdash; pricing review candidates.",
+  ]);
+});
+
+/* ──────────────────────────────────────────────────────────────────────────
+   4. MONTHLY TREND — Plotly interactive line
+   ────────────────────────────────────────────────────────────────────────── */
+fetch("/api/analytics/monthly-trend").then(function(r){ return r.json(); }).then(function(d){
+  hideSkeleton("skelTrend");
+  var months = d.data.map(function(r){ return r.month; });
+  var units  = d.data.map(function(r){ return r.units; });
+  var trace = {
+    x: months, y: units,
+    mode: "lines+markers",
+    line:   { color: palette.primary2, width: 3, shape: "spline" },
+    marker: { color: palette.primary, size: 9, line: { color: "#fff", width: 1 } },
+    fill: "tozeroy",
+    fillcolor: "rgba(99,102,241,0.15)",
+    hovertemplate: "<b>%{x}</b><br>%{y:,} units<extra></extra>",
+  };
+  var layout = Object.assign({}, plotlyLayoutBase, {
+    height: 400,
+    xaxis: Object.assign({}, plotlyLayoutBase.xaxis, { title: "" }),
+    yaxis: Object.assign({}, plotlyLayoutBase.yaxis, { title: "Units" }),
+  });
+  mountPlotly("chartTrend", [trace], layout);
+  showInsights("insTrend", d.insights);
+}).catch(function(e){ console.error("[trend] failed:", e); });
+
+/* ──────────────────────────────────────────────────────────────────────────
+   5. PRICE × RATING — Plotly interactive scatter
+   ────────────────────────────────────────────────────────────────────────── */
+fetch("/api/analytics/ratings-vs-price?sample=1200").then(function(r){ return r.json(); }).then(function(d){
+  hideSkeleton("skelScatter");
+  var trace = {
+    x: d.data.map(function(r){ return r.price; }),
+    y: d.data.map(function(r){ return r.stars; }),
+    text: d.data.map(function(r){ return r.category; }),
+    customdata: d.data.map(function(r){ return r.demand; }),
+    mode: "markers",
+    marker: {
+      size: 7,
+      color: d.data.map(function(r){ return r.demand; }),
+      colorscale: [[0, palette.red], [0.5, palette.warm], [1, palette.green]],
+      cmin: 0, cmax: 100,
+      opacity: 0.78,
+      line: { color: "rgba(255,255,255,0.18)", width: 0.5 },
+      colorbar: { title: { text: "Demand", font: { color: palette.textDim } }, tickfont: { color: palette.textDim }, thickness: 12, len: 0.7 },
+    },
+    hovertemplate: "<b>%{text}</b><br>Price: ₹%{x:,.0f}<br>Rating: %{y}<br>Demand: %{customdata}<extra></extra>",
+  };
+  var layout = Object.assign({}, plotlyLayoutBase, {
+    height: 400,
+    xaxis: Object.assign({}, plotlyLayoutBase.xaxis, { title: "Price (₹)" }),
+    yaxis: Object.assign({}, plotlyLayoutBase.yaxis, { title: "Rating", range: [0.5, 5.2] }),
+  });
+  mountPlotly("chartScatter", [trace], layout);
+  showInsights("insScatter", d.insights);
+}).catch(function(e){ console.error("[scatter] failed:", e); });
+
+/* ──────────────────────────────────────────────────────────────────────────
+   6. CORRELATION MATRIX — Plotly interactive heatmap
+   ────────────────────────────────────────────────────────────────────────── */
+fetch("/api/analytics/correlation").then(function(r){ return r.json(); }).then(function(d){
+  hideSkeleton("skelHeatmap");
+  var trace = {
+    z: d.matrix,
+    x: d.columns,
+    y: d.columns,
+    type: "heatmap",
+    colorscale: [
+      [0,   "#ef4444"],
+      [0.5, "#1e293b"],
+      [1,   "#10b981"],
+    ],
+    zmin: -1, zmax: 1,
+    hovertemplate: "%{y} ↔ %{x}<br>r = %{z:+.3f}<extra></extra>",
+    showscale: true,
+    colorbar: { tickfont: { color: palette.textDim }, thickness: 12, len: 0.8 },
+  };
+  // annotation per cell
+  var annotations = [];
+  for (var i = 0; i < d.columns.length; i++) {
+    for (var j = 0; j < d.columns.length; j++) {
+      annotations.push({
+        x: d.columns[j], y: d.columns[i],
+        text: d.matrix[i][j].toFixed(2),
+        showarrow: false,
+        font: { color: Math.abs(d.matrix[i][j]) > 0.55 ? "#fff" : "rgba(255,255,255,0.7)", size: 12, family: "Arial" },
+      });
+    }
+  }
+  var layout = Object.assign({}, plotlyLayoutBase, {
+    height: 400,
+    annotations: annotations,
+    xaxis: Object.assign({}, plotlyLayoutBase.xaxis, { side: "bottom" }),
+    yaxis: Object.assign({}, plotlyLayoutBase.yaxis, { autorange: "reversed" }),
+  });
+  mountPlotly("chartHeatmap", [trace], layout);
+  showInsights("insCorr", d.insights);
+}).catch(function(e){ console.error("[heatmap] failed:", e); });
+
+/* ──────────────────────────────────────────────────────────────────────────
+   7. PRICE BOX PLOT — Plotly box per category
+   ────────────────────────────────────────────────────────────────────────── */
+fetch("/api/analytics/price-distribution?top=10").then(function(r){ return r.json(); }).then(function(d){
+  hideSkeleton("skelBox");
+  var traces = [];
+  var cats = Object.keys(d.samples);
+  // helper: convert "#rrggbb" → "rgba(r,g,b,a)" for translucent box fills
+  function hexToRgba(hex, a) {
+    var c = hex.replace("#", "");
+    var r = parseInt(c.substring(0, 2), 16);
+    var g = parseInt(c.substring(2, 4), 16);
+    var b = parseInt(c.substring(4, 6), 16);
+    return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+  }
+  cats.forEach(function(cat, i) {
+    var col = SERIES_COLORS[i % SERIES_COLORS.length];
+    traces.push({
+      type: "box",
+      name: cat,
+      y: d.samples[cat],
+      // explicit colors so the box body, outline and outliers are all visible on dark glass
+      fillcolor: hexToRgba(col, 0.35),
+      line:    { color: col, width: 2 },
+      marker:  { color: col, size: 4, opacity: 0.85 },
+      boxpoints: "outliers",
+      hoverlabel: { bgcolor: "#0f172a", bordercolor: col, font: { color: "#fff" } },
+    });
+  });
+  var layout = Object.assign({}, plotlyLayoutBase, {
+    showlegend: false,
+    yaxis: Object.assign({}, plotlyLayoutBase.yaxis, { title: "Price (₹)" }),
+    xaxis: Object.assign({}, plotlyLayoutBase.xaxis, { tickangle: -22 }),
+  });
+  mountPlotly("chartBox", traces, layout);
+  showInsights("insBox", d.insights);
+}).catch(function(e){ console.error("[box] failed:", e); });
+</script>
+</body>
+</html>

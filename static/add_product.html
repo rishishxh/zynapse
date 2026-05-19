@@ -6,9 +6,9 @@
 <title>Add Product - ZYNAPSE</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-<link rel="stylesheet" href="/static/style.css?v=4">
-<link rel="stylesheet" href="/static/style-oracle.css?v=4">
-  <link rel="stylesheet" href="/static/style-dark-theme.css?v=5">
+<link rel="stylesheet" href="/static/style.css?v=6">
+<link rel="stylesheet" href="/static/style-oracle.css?v=6">
+  <link rel="stylesheet" href="/static/style-dark-theme.css?v=6">
 <style>
 .page-hero {
   background: rgba(255, 255, 255, 0.025);
@@ -54,6 +54,31 @@
 .img-upload-box i { font-size:2rem; color:#9ca3af; display:block; margin-bottom:8px; }
 .img-upload-box p { font-size:.85rem; color: #ffffff; margin:0; }
 .img-preview { width:100%; max-height:200px; object-fit:contain; border-radius:8px; display:none; margin-top:12px; }
+
+/* Submit button — glass with brand-violet accent, overrides the dark-theme .btn-primary repaint */
+#submitBtn.btn-primary {
+  background: linear-gradient(135deg, rgba(99,102,241,0.85), rgba(124,58,237,0.85)) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(167,139,250,0.55) !important;
+  font-weight: 600 !important;
+  padding: 10px 22px !important;
+  border-radius: 10px !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 6px 20px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.18);
+  transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
+}
+#submitBtn.btn-primary:hover {
+  background: linear-gradient(135deg, rgba(99,102,241,1), rgba(124,58,237,1)) !important;
+  box-shadow: 0 8px 26px rgba(99,102,241,0.55), inset 0 1px 0 rgba(255,255,255,0.22);
+  transform: translateY(-1px);
+}
+#submitBtn.btn-primary:disabled {
+  filter: grayscale(0.4) brightness(0.85);
+  cursor: not-allowed;
+  transform: none;
+}
+#submitBtn .bi { color: #ffffff; }
 </style>
 </head>
 <body>
@@ -68,7 +93,8 @@
         <li><a href="/predictions.html">Predictions</a></li>
         <li><a href="/inventory.html">Inventory</a></li>
         <li><a href="/category_analysis.html">Category Analysis</a></li>
-      </ul>
+        <li><a href="/analytics.html">Analytics</a></li>
+        </ul>
     </div>
     <div class="d-flex align-items-center gap-3">
       <a href="/checkout.html" class="icon-btn" style="color:#ffffff;font-size:1.3rem;position:relative;"><i class="bi bi-cart3"></i><span id="navCartCount" style="position:absolute; top:-5px; right:-10px; background:#ef4444; color:white; font-size:0.65rem; padding:2px 5px; border-radius:10px; font-weight:bold; display:none;">0</span></a>
@@ -91,9 +117,9 @@
 <div class="oracle-main-container">
   <section class="page-hero">
     <div class="container">
-      <div class="badge-pill mb-2"><i class="bi bi-plus-circle"></i> ADD PRODUCT</div>
-      <h1>Add Your Product</h1>
-      <p>List your product on ZYNAPSE marketplace</p>
+      <div class="badge-pill mb-2" id="pageBadge"><i class="bi bi-plus-circle"></i> ADD PRODUCT</div>
+      <h1 id="pageTitle">Add Your Product</h1>
+      <p id="pageSub">List your product on ZYNAPSE marketplace</p>
     </div>
   </section>
 
@@ -159,9 +185,9 @@
       </div>
 
       <div class="d-flex gap-2 justify-content-end mt-4">
-        <a href="/profile.html" class="btn btn-outline-secondary">Cancel</a>
+        <a href="/my_products.html" class="btn btn-outline-secondary">Cancel</a>
         <button class="btn btn-primary" id="submitBtn">
-          <i class="bi bi-check-circle me-1"></i>Add Product
+          <i class="bi bi-check-circle me-1" id="submitIcon"></i><span id="submitLabel">Add Product</span>
         </button>
       </div>
     </div>
@@ -185,6 +211,46 @@ function g(id) { return document.getElementById(id); }
 function showErr(m) { var e=g('errBox'); e.textContent=m; e.style.display='block'; g('okBox').style.display='none'; }
 function showOk(m)  { var e=g('okBox');  e.textContent=m; e.style.display='block'; g('errBox').style.display='none'; }
 
+/* detect edit mode via ?edit_id= */
+var EDIT_ID = (function() {
+  var m = new URLSearchParams(window.location.search).get('edit_id');
+  return m ? parseInt(m, 10) : null;
+})();
+
+if (EDIT_ID) {
+  document.title = 'Edit Product - ZYNAPSE';
+  g('pageBadge').innerHTML = '<i class="bi bi-pencil-square"></i> EDIT PRODUCT';
+  g('pageTitle').textContent = 'Edit Your Product';
+  g('pageSub').textContent   = 'Update the details for this product';
+  g('submitLabel').textContent = 'Save Changes';
+}
+
+function prefillFromProduct(p) {
+  if (!p) return;
+  g('pTitle').value  = p.title || '';
+  g('pPrice').value  = p.price != null ? p.price : '';
+  g('pStars').value  = p.stars != null ? p.stars : '';
+  g('pBought').value = p.boughtInLastMonth != null ? p.boughtInLastMonth : 0;
+  g('pDesc').value   = p.description || '';
+  g('pBS').checked   = !!p.isBestSeller;
+  // category needs to be set AFTER the <option> list is built
+  var sel = g('pCat');
+  if (sel.options.length > 1) {
+    sel.value = p.categoryName || '';
+  } else {
+    sel.setAttribute('data-pending-value', p.categoryName || '');
+  }
+  // image preview (existing image)
+  if (p.asin) {
+    var ver = encodeURIComponent(p.updated_on || p.added_on || '');
+    var prev = g('imgPreview');
+    prev.src = '/api/images/' + p.asin + '.jpg' + (ver ? ('?v=' + ver) : '');
+    prev.style.display = 'block';
+    prev.onerror = function() { prev.style.display = 'none'; };
+    g('imgName').textContent = 'Current image — choose a file to replace it';
+  }
+}
+
 /* load categories */
 fetch('/api/categories')
 .then(function(r){return r.json();})
@@ -193,7 +259,29 @@ fetch('/api/categories')
   var sel = g('pCat');
   sel.innerHTML = '<option value="">Select category</option>' +
     cats.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+  var pending = sel.getAttribute('data-pending-value');
+  if (pending) { sel.value = pending; sel.removeAttribute('data-pending-value'); }
 }).catch(function(){});
+
+/* if edit mode, fetch product data and prefill */
+if (EDIT_ID) {
+  fetch('/api/user/products?email=' + encodeURIComponent(user.email || ''))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var list = (d && d.data) || [];
+      var match = null;
+      for (var i = 0; i < list.length; i++) {
+        if (parseInt(list[i].id, 10) === EDIT_ID) { match = list[i]; break; }
+      }
+      if (!match) {
+        showErr('Product not found or not owned by you.');
+        g('submitBtn').disabled = true;
+        return;
+      }
+      prefillFromProduct(match);
+    })
+    .catch(function() { showErr('Failed to load product data.'); });
+}
 
 /* image preview */
 g('pImage').addEventListener('change', function() {
@@ -230,26 +318,34 @@ g('submitBtn').addEventListener('click', function() {
   if (stars<1||stars>5){ showErr('Stars must be between 1 and 5.'); return; }
 
   var btn = this;
-  btn.textContent = 'Adding...'; btn.disabled = true;
+  var origLabel = g('submitLabel').textContent;
+  g('submitLabel').textContent = EDIT_ID ? 'Saving...' : 'Adding...';
+  btn.disabled = true;
 
-  /* step 1: create product record */
-  fetch('/api/user/products', {
-    method: 'POST',
+  var payload = {
+    owner_email: user.email || '',
+    title: title, categoryName: cat,
+    price: price, stars: stars,
+    boughtInLastMonth: bought,
+    isBestSeller: bs, description: desc
+  };
+  var url    = EDIT_ID ? ('/api/user/products/' + EDIT_ID) : '/api/user/products';
+  var method = EDIT_ID ? 'PUT' : 'POST';
+
+  fetch(url, {
+    method: method,
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      owner_email: user.email || '',
-      title: title, categoryName: cat,
-      price: price, stars: stars,
-      boughtInLastMonth: bought,
-      isBestSeller: bs, description: desc
-    })
+    body: JSON.stringify(payload)
   })
   .then(function(r) { return r.json().then(function(d) { return {ok:r.ok, d:d}; }); })
   .then(function(res) {
-    if (!res.ok) { showErr(res.d.detail || 'Failed to add product.'); return; }
+    if (!res.ok) {
+      showErr(res.d.detail || (EDIT_ID ? 'Failed to save changes.' : 'Failed to add product.'));
+      return;
+    }
     var productId = res.d.product.id;
 
-    /* step 2: upload image if selected */
+    /* upload image if a new one was selected */
     var imgFile = g('pImage').files[0];
     if (imgFile) {
       var fd = new FormData();
@@ -258,16 +354,16 @@ g('submitBtn').addEventListener('click', function() {
       fd.append('email', user.email || '');
       return fetch('/api/upload-product-image', { method:'POST', body:fd })
         .then(function() {
-          showOk('Product added with image! Redirecting...');
+          showOk(EDIT_ID ? 'Changes saved with new image! Redirecting...' : 'Product added with image! Redirecting...');
           setTimeout(function() { window.location.href = '/my_products.html'; }, 1500);
         });
     } else {
-      showOk('Product added! Redirecting...');
+      showOk(EDIT_ID ? 'Changes saved! Redirecting...' : 'Product added! Redirecting...');
       setTimeout(function() { window.location.href = '/my_products.html'; }, 1500);
     }
   })
   .catch(function() { showErr('Server error.'); })
-  .finally(function() { btn.textContent = 'Add Product'; btn.disabled = false; });
+  .finally(function() { g('submitLabel').textContent = origLabel; btn.disabled = false; });
 });
 </script>
 </body>

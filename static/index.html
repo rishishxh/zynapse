@@ -11,13 +11,14 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
   <!-- ✅ FIXED CSS PATHS -->
-  <link rel="stylesheet" href="/static/style.css?v=4">
-  <link rel="stylesheet" href="/static/style-oracle.css?v=4">
-  <link rel="stylesheet" href="/static/style-dark-theme.css?v=5">
-  <link rel="stylesheet" href="/static/style-dark-theme.css?v=5">
+  <link rel="stylesheet" href="/static/style.css?v=6">
+  <link rel="stylesheet" href="/static/style-oracle.css?v=6">
+  <link rel="stylesheet" href="/static/style-dark-theme.css?v=6">
+  <link rel="stylesheet" href="/static/style-dark-theme.css?v=6">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
 </head>
 
@@ -39,7 +40,8 @@
         <li><a href="/demand_trends.html">Demand Trends</a></li>
         <li><a href="/predictions.html">Predictions</a></li>
         <li><a href="/inventory.html">Inventory</a></li>
-      </ul>
+        <li><a href="/analytics.html">Analytics</a></li>
+        </ul>
 
     </div>
 
@@ -112,17 +114,21 @@
   .splash-title {
     position: relative;
     z-index: 2;
-    font-family: 'Outfit', sans-serif;
-    font-size: clamp(2.5rem, 6vw, 5rem);
-    font-weight: 800;
-    letter-spacing: 0.04em;
+    font-family: 'Space Grotesk', 'Outfit', sans-serif;
+    font-size: clamp(2.75rem, 7vw, 6rem);
+    font-weight: 600;
+    letter-spacing: -0.035em;
     text-transform: uppercase;
     color: #fff;
     text-align: center;
-    line-height: 1.05;
+    line-height: 1;
     opacity: 0;
     transform: translateY(10px);
     animation: slowFade 2.5s ease 0.3s forwards;
+  }
+
+  .splash-title span {
+    font-feature-settings: "ss01", "ss02";
   }
 
   .splash-title span {
@@ -386,4 +392,5 @@ document.querySelector("input.form-control").addEventListener("keydown", functio
   }
 });
 </script>
+<script src="/static/zynapse-toast.js"></script>
 <script src="/static/nav_user.js"></script>

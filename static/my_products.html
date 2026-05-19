@@ -7,9 +7,9 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<link rel="stylesheet" href="/static/style.css?v=4">
-<link rel="stylesheet" href="/static/style-oracle.css?v=4">
-  <link rel="stylesheet" href="/static/style-dark-theme.css?v=5">
+<link rel="stylesheet" href="/static/style.css?v=6">
+<link rel="stylesheet" href="/static/style-oracle.css?v=6">
+  <link rel="stylesheet" href="/static/style-dark-theme.css?v=6">
 <style>
 .page-hero {
   background: rgba(255, 255, 255, 0.025);
@@ -46,8 +46,10 @@
 .dp-high   { background: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); }
 .dp-medium { background: rgba(96, 165, 250, 0.15); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.3); }
 .dp-low    { background: rgba(255, 255, 255, 0.05); color: #d1d5db; border: 1px solid rgba(255, 255, 255, 0.1); }
-.del-btn { background: none; border: none; color: #9ca3af; font-size: .8rem; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+.del-btn, .edit-btn { background: none; border: none; color: #9ca3af; font-size: .8rem; cursor: pointer; padding: 4px 8px; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; }
 .del-btn:hover { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+.edit-btn:hover { background: rgba(99, 102, 241, 0.18); color: #a5b4fc; }
+.card-actions { display: flex; gap: 2px; }
 .card { background: rgba(255, 255, 255, 0.04) !important; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08) !important; }
 </style>
 </head>
@@ -63,7 +65,8 @@
         <li><a href="/predictions.html">Predictions</a></li>
         <li><a href="/inventory.html">Inventory</a></li>
         <li><a href="/category_analysis.html">Category Analysis</a></li>
-      </ul>
+        <li><a href="/analytics.html">Analytics</a></li>
+        </ul>
     </div>
     <div class="d-flex align-items-center gap-3">
       <a href="/checkout.html" class="icon-btn" style="color:#ffffff;font-size:1.3rem;position:relative;"><i class="bi bi-cart3"></i><span id="navCartCount" style="position:absolute; top:-5px; right:-10px; background:#ef4444; color:white; font-size:0.65rem; padding:2px 5px; border-radius:10px; font-weight:bold; display:none;">0</span></a>
@@ -131,10 +134,9 @@
         </a>
       </div>
       <div id="productsGrid" class="row g-3">
-        <div class="col-12 text-center py-5">
-          <div class="spinner-border text-primary"></div>
-          <p class="mt-2 text-white-50">Loading your products...</p>
-        </div>
+        <div class="col-sm-6 col-md-4"><div class="card h-100 border-0 shadow-sm skeleton-card"><div class="skeleton-box skeleton-img"></div><div class="skeleton-box skeleton-title mt-2"></div><div class="skeleton-box skeleton-subtitle"></div><div class="skeleton-box skeleton-price mt-3"></div></div></div>
+        <div class="col-sm-6 col-md-4"><div class="card h-100 border-0 shadow-sm skeleton-card"><div class="skeleton-box skeleton-img"></div><div class="skeleton-box skeleton-title mt-2"></div><div class="skeleton-box skeleton-subtitle"></div><div class="skeleton-box skeleton-price mt-3"></div></div></div>
+        <div class="col-sm-6 col-md-4"><div class="card h-100 border-0 shadow-sm skeleton-card"><div class="skeleton-box skeleton-img"></div><div class="skeleton-box skeleton-title mt-2"></div><div class="skeleton-box skeleton-subtitle"></div><div class="skeleton-box skeleton-price mt-3"></div></div></div>
       </div>
     </div>
 
@@ -215,11 +217,25 @@ function renderCharts(products) {
 }
 
 function deleteProduct(id) {
-  if (!confirm('Delete this product?')) return;
-  fetch('/api/user/products/' + id + '?email=' + encodeURIComponent(user.email), { method:'DELETE' })
-  .then(function(r) { return r.json(); })
-  .then(function() { loadProducts(); })
-  .catch(function() { alert('Delete failed.'); });
+  zynConfirm({
+    icon: 'danger',
+    title: 'Delete Product',
+    message: 'This product will be permanently removed. This action cannot be undone.',
+    confirmText: 'Delete',
+    cancelText: 'Keep It',
+    btnStyle: 'confirm-danger'
+  }).then(function (yes) {
+    if (!yes) return;
+    fetch('/api/user/products/' + id + '?email=' + encodeURIComponent(user.email), { method:'DELETE' })
+    .then(function(r) { return r.json(); })
+    .then(function() {
+      zynToast({type:'success', title:'Deleted', message:'Product has been removed successfully.'});
+      loadProducts();
+    })
+    .catch(function() {
+      zynToast({type:'error', title:'Delete Failed', message:'Could not delete the product. Please try again.'});
+    });
+  });
 }
 
 function loadProducts() {
@@ -261,8 +277,9 @@ function loadProducts() {
       var score = demandScore(p);
       var level = demandLevel(score);
       var dpCls = level==='High' ? 'dp-high' : level==='Medium' ? 'dp-medium' : 'dp-low';
+      var imgVer = encodeURIComponent(p.updated_on || p.added_on || '');
       var imgSrc = p.asin
-        ? '/api/images/' + p.asin + '.jpg'
+        ? '/api/images/' + p.asin + '.jpg' + (imgVer ? ('?v=' + imgVer) : '')
         : '/static/assets/placeholder_product.png';
       var stars = '';
       var s = Math.round(parseFloat(p.stars)||0);
@@ -273,7 +290,10 @@ function loadProducts() {
         '<div class="card-body">' +
         '<div class="d-flex justify-content-between align-items-start mb-1">' +
         '<div class="fw-700" style="font-size:.9rem;line-height:1.3;">' + p.title + '</div>' +
-        '<button class="del-btn" onclick="deleteProduct(' + p.id + ')"><i class="bi bi-trash"></i></button>' +
+        '<div class="card-actions">' +
+          '<a class="edit-btn" href="/add_product.html?edit_id=' + p.id + '" title="Edit"><i class="bi bi-pencil-square"></i></a>' +
+          '<button class="del-btn" onclick="deleteProduct(' + p.id + ')" title="Delete"><i class="bi bi-trash"></i></button>' +
+        '</div>' +
         '</div>' +
         '<div class="text-white-50" style="font-size:.72rem;">' + (p.categoryName||'') + '</div>' +
         '<div class="d-flex align-items-center gap-2 mt-2">' +
@@ -295,5 +315,7 @@ function loadProducts() {
 
 loadProducts();
 </script>
+<script src="/static/zynapse-toast.js"></script>
+<script src="/static/nav_user.js"></script>
 </body>
 </html>

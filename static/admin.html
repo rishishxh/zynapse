@@ -7,9 +7,9 @@
   <title>Admin Dashboard — ZYNAPSE</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css?v=4">
-  <link rel="stylesheet" href="/static/style-oracle.css?v=4">
-  <link rel="stylesheet" href="/static/style-dark-theme.css?v=5">
+  <link rel="stylesheet" href="/static/style.css?v=6">
+  <link rel="stylesheet" href="/static/style-oracle.css?v=6">
+  <link rel="stylesheet" href="/static/style-dark-theme.css?v=6">
 </head>
 <body>
   <div class="admin-layout">
@@ -28,9 +28,10 @@
         <li><a href="/inventory.html" class="active"><i class="bi bi-box-seam"></i> Inventory</a></li>
         <li><a href="/predictions.html"><i class="bi bi-diagram-3"></i> Predictions</a></li>
         <li><a href="/profile.html"><i class="bi bi-gear"></i> Settings</a></li>
-      </ul>
+        <li><a href="/analytics.html">Analytics</a></li>
+        </ul>
       <div class="sidebar-footer">
-        <button class="btn-report" onclick="alert('Report generation — coming soon!')"><i class="bi bi-file-earmark-bar-graph"></i> GENERATE REPORT</button>
+        <button class="btn-report" onclick="zynToast({type:'info', title:'Coming Soon', message:'Report generation will be available in the next update.'})"><i class="bi bi-file-earmark-bar-graph"></i> GENERATE REPORT</button>
         <a href="/profile.html" class="support-link"><i class="bi bi-headset"></i> SUPPORT</a>
       </div>
     </aside>
@@ -77,7 +78,7 @@
             <p>Monitor historical transaction data and automated replenishment status.</p>
           </div>
           <div class="header-actions">
-            <button class="btn-export" onclick="alert('Exporting CSV...')"><i class="bi bi-download"></i> Export CSV</button>
+            <button class="btn-export" onclick="zynToast({type:'success', title:'Exporting', message:'Your CSV file is being prepared for download.'})"><i class="bi bi-download"></i> Export CSV</button>
             <button class="btn-create-order" onclick="window.location.href='/checkout.html'"><i class="bi bi-plus-lg"></i> Create Manual Order</button>
           </div>
         </div>
@@ -189,6 +190,7 @@
       ' <span class="stat-badge" style="background:#d1fae5;color:#059669">Live</span>';
   }).catch(function(){});
   </script>
+<script src="/static/zynapse-toast.js"></script>
 <script src="/static/nav_user.js"></script>
 </body>
 </html>

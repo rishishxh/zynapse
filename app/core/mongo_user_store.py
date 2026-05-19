@@ -120,6 +120,33 @@ def get_user_products(owner_email):
     ))
 
 
+EDITABLE_FIELDS = {
+    "title", "categoryName", "price", "stars",
+    "boughtInLastMonth", "isBestSeller", "description",
+}
+
+
+def update_user_product(owner_email, product_id, updates):
+    """Update editable fields on a user-owned product.
+    Returns (updated_doc, error). Only fields in EDITABLE_FIELDS are applied.
+    """
+    clean = {k: v for k, v in updates.items() if k in EDITABLE_FIELDS}
+    if not clean:
+        return None, "no editable fields supplied"
+    clean["updated_on"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+    result = user_products_col().update_one(
+        {"id": int(product_id), "owner_email": owner_email.lower()},
+        {"$set": clean},
+    )
+    if result.matched_count == 0:
+        return None, "product not found or not owned by user"
+    doc = user_products_col().find_one(
+        {"id": int(product_id), "owner_email": owner_email.lower()},
+        {"_id": 0},
+    )
+    return doc, None
+
+
 def delete_user_product(owner_email, product_id):
     result = user_products_col().delete_one({
         "owner_email": owner_email.lower(),
